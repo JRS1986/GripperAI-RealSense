@@ -1,0 +1,6 @@
+model_checkpoint_path: "/home/autolab/Public/drive/projects/dex-net/data/models/grasp_quality/model_tuyjbovxul/model_185000.ckpt"
+all_model_checkpoint_paths: "/home/autolab/Public/drive/projects/dex-net/data/models/grasp_quality/model_tuyjbovxul/model_165000.ckpt"
+all_model_checkpoint_paths: "/home/autolab/Public/drive/projects/dex-net/data/models/grasp_quality/model_tuyjbovxul/model_170000.ckpt"
+all_model_checkpoint_paths: "/home/autolab/Public/drive/projects/dex-net/data/models/grasp_quality/model_tuyjbovxul/model_175000.ckpt"
+all_model_checkpoint_paths: "/home/autolab/Public/drive/projects/dex-net/data/models/grasp_quality/model_tuyjbovxul/model_180000.ckpt"
+all_model_checkpoint_paths: "/home/autolab/Public/drive/projects/dex-net/data/models/grasp_quality/model_tuyjbovxul/model_185000.ckpt"

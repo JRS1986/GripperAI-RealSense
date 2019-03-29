@@ -1,0 +1,23 @@
+# Dockerfile
+FROM ubuntu
+
+COPY . /
+#WORKDIR = /app
+
+RUN apt-get update # update the package manager
+RUN apt-get install -y python # install python
+RUN apt-get install -y python3 # install python
+
+
+#CMD ["echo", "pip --version"]
+RUN python -m pip install --pre --upgrade PySide2==5.12.1
+RUN pip install -r requirements.txt
+#COPY GripperViewer app/GripperViewer
+#COPY gqcnn_jeffbranch_adapted app/gqcnn_jeffbranch_adapted
+
+
+EXPOSE 80
+
+#CMD ["python", "GripperViewer/main_uic.py"]
+#RUN apt-get install -y python-pip python-dev build-essential # install pip other basic python libraries for building packages
+#RUN pip install flask # install flask with pip
