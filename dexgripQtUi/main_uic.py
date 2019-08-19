@@ -7,8 +7,9 @@
 # you may change iterations, (crop)image_width/heights, gripper_width, detection distance parameters in suction config (to ignore the background, detection range scale is weird, third parameter is for the depth and it does not scale like one might expect, at least for my case)
 # Author Dexter Frueh
 import sys
-import cv2
+import os
 import numpy as np
+import cv2
 import pyrealsense2 as rs
 import json
 import png
@@ -21,7 +22,7 @@ from PySide2 import QtCore, QtWidgets, QtGui
 from ui_mainwindow import Ui_MainWindow
 
 #parameters
-dexnet_loadpath = '/home/jasy/GripperViewContainer/gqcnn_jeffbranch_adapted'
+dexnet_loadpath = os.getcwd()+'/gqcnn_jeffbranch_adapted'
 
 def test_advanced_mode():
     ## License: Apache 2.0. See LICENSE file in root directory.
@@ -63,7 +64,8 @@ def test_advanced_mode():
             dev = find_device_that_supports_advanced_mode()
             advnc_mode = rs.rs400_advanced_mode(dev)
             print("Advanced mode is", "enabled" if advnc_mode.is_enabled() else "disabled")
-        optionfile = "/home/jasy/FDexter/RealSense/garnichtsoschlechtesetting.json"
+        optionfile = os.getcwd()+"/garnichtsoschlechtesetting.json"
+        #optionfile = "/home/jasy/FDexter/RealSense/garnichtsoschlechtesetting.json"
         #optionfile = "/home/jasy/FDexter/RealSense/holefilletc.json"
         with open(optionfile, "r") as read_file:
             settings = json.load(read_file)
@@ -221,8 +223,10 @@ class dexnetThread(QtCore.QThread):
     def run_dexnet_grasp(self):
         #color_im =self.colorlabel.image
         #depth_im =self.depthlabel.nparray
-        print('gotit!')
-        python3_command = "python /home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/examples/policy.py"  # launch your python2 script using bash
+        print('gotit!') 
+        python3_command = "python "+os.getcwd()+"/policy.py"  # launch your python2 script
+        #python3_command = "python /home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/examples/policy.py"  
+        # launch your python2 script using bash
         process= subprocess.call(python3_command.split())
         output, error = process.communicate()  # receive output from the python2 script
         print(output,error)
@@ -459,8 +463,10 @@ class CameraView(QtWidgets.QMainWindow):
         if hasattr(self, 'pose_grasp'):
             del self.pose_grasp 
             self.grasp_drawn = False
-        config_grasp = '/home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/cfg/examples/policy_both.yaml'
-        config_suc = '/home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/cfg/examples/suction_policy_both.yaml'
+        config_grasp = os.getcwd() + '/policy_both.yaml'
+        config_suc = os.getcwd()+'/suction_policy_both.yaml'
+        #config_grasp = '/home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/cfg/examples/policy_both.yaml'
+        #config_suc = '/home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/cfg/examples/suction_policy_both.yaml'
         color_im = self.colorlabel.nparray
         depth_im = self.depthlabel.nparray
         print(depth_im.shape)
