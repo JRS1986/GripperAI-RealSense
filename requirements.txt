@@ -14,6 +14,6 @@ scikit-image==0.13.1
 scikit-learn==0.19.0
 Pillow==4.3.0
 urllib3==1.22
-opencv-python==3.3.0.9
+opencv-python==4.2.0.32
 IPython==5.5.0
 autolab-perception==0.0.4
