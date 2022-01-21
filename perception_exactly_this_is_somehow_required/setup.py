@@ -14,7 +14,7 @@ requirements = [
     'cycler',
     'Pillow',
     'pyserial>=3.4',
-    'ipython==5.5.0',
+    'ipython==7.16.3',
     'scikit-image',
     'scikit-learn',
     'scikit-video'
