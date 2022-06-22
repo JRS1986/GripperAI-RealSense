@@ -1,4 +1,4 @@
-numpy==1.13.3
+numpy==1.22.0
 pyrealsense2==2.18.1.549
 PySide2==5.12.1
 pypng==0.0.19
