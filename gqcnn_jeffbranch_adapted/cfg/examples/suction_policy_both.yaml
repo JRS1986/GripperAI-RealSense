@@ -46,7 +46,7 @@ policy:
     window_size: 5
     sample_rate: 1.0
 
-    gqcnn_model: /home/jasy/GripperViewContainer/trained_models/GQ-Suction 
+    gqcnn_model: ../trained_models/GQ-Suction
     #    crop_height: 96
     #    crop_width: 96
     crop_height: 196

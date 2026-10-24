@@ -79,7 +79,7 @@ if __name__ == '__main__':
             raise RuntimeError("Number of images requested exceeds current buffer size")
         
         # Cut out the images and timestamps we're returning, save image shape
-        ret_images, ret_times = zip(*buffer[:req.num_requested])
+        ret_images, ret_times = list(zip(*buffer[:req.num_requested]))
         image_shape = ret_images[0].shape
         images_per_frame = 1 if len(image_shape) == 2 else image_shape[2]
         

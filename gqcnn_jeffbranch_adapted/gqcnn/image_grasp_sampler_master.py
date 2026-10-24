@@ -37,7 +37,7 @@ import sys
 from time import sleep, time
 
 import scipy.spatial.distance as ssd
-import scipy.ndimage.filters as snf
+import scipy.ndimage as snf
 import scipy.stats as ss
 import sklearn.mixture
 
@@ -69,7 +69,7 @@ class DepthSamplingMode(object):
     MIN = 'min'
     MAX = 'max'
 
-class ImageGraspSampler(object):
+class ImageGraspSampler(object, metaclass=ABCMeta):
     """
     Wraps image to crane grasp candidate generation for easy deployment of GQ-CNN.
 
@@ -78,7 +78,6 @@ class ImageGraspSampler(object):
     config : :obj:`autolab_core.YamlConfig`
         a dictionary-like object containing the parameters of the sampler
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, config):
         # set params
@@ -205,7 +204,7 @@ class AntipodalDepthImageGraspSampler(ImageGraspSampler):
         self._max_rejection_samples = self._config['max_rejection_samples']
 
         self._min_num_edge_pixels = 0
-        if 'min_num_edge_pixels' in self._config.keys():
+        if 'min_num_edge_pixels' in list(self._config.keys()):
             self._min_num_edge_pixels = self._config['min_num_edge_pixels']
         
         # distance thresholds for rejection sampling
@@ -519,7 +518,7 @@ class DepthImageSuctionPointSampler(ImageGraspSampler):
                                   scale=self._max_phi-self._min_phi)
 
         self._mean_depth = 0.0
-        if 'mean_depth' in self._config.keys():
+        if 'mean_depth' in list(self._config.keys()):
             self._mean_depth = self._config['mean_depth']
         self._sigma_depth = self._config['sigma_depth']
         self._depth_rv = ss.norm(self._mean_depth, self._sigma_depth**2)

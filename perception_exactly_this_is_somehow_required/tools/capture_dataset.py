@@ -202,7 +202,7 @@ if __name__ == '__main__':
     
     # read workspace objects
     workspace_objects = {}
-    for obj_key, obj_config in workspace_config['objects'].iteritems():
+    for obj_key, obj_config in workspace_config['objects'].items():
         mesh_filename = obj_config['mesh_filename']
         pose_filename = obj_config['pose_filename']
         obj_mesh = trimesh.load_mesh(mesh_filename)
@@ -218,7 +218,7 @@ if __name__ == '__main__':
     sensor_poses = {}
     camera_intrs = {}
     workspace_ims = {}
-    for sensor_name, sensor_config in sensor_configs.iteritems():
+    for sensor_name, sensor_config in sensor_configs.items():
         # read params
         sensor_type = sensor_config['type']
         sensor_frame = sensor_config['frame']
@@ -242,7 +242,7 @@ if __name__ == '__main__':
         scene = Scene()
         camera = VirtualCamera(camera_intr, T_camera_world)
         scene.camera = camera
-        for obj_key, scene_obj in workspace_objects.iteritems():
+        for obj_key, scene_obj in workspace_objects.items():
             scene.add_object(obj_key, scene_obj)
         workspace_ims[sensor_name] = scene.wrapped_render([RenderMode.DEPTH])[0]
 
@@ -300,7 +300,7 @@ if __name__ == '__main__':
         utils.keyboard_input(message=message)
 
         # capture
-        for sensor_name, sensor in sensors.iteritems():
+        for sensor_name, sensor in sensors.items():
             logging.info('Capturing images from sensor %s' %(sensor_name))
 
             # read pose and intrinsics
@@ -380,6 +380,6 @@ if __name__ == '__main__':
                 segmask.save(segmask_filename)
                 
     # stop all sensors
-    for sensor_name, sensor in sensors.iteritems():
+    for sensor_name, sensor in sensors.items():
         datasets[sensor_name].flush()
         sensor.stop()

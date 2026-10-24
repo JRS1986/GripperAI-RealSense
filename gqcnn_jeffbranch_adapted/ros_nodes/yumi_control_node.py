@@ -124,7 +124,7 @@ def execute_grasp(T_gripper_world, robot, left_arm, right_arm, subscriber, confi
             _, T_cur_gripper_world = subscriber.left.get_pose()
             dist_from_goal = np.linalg.norm(T_cur_gripper_world.translation - T_gripper_world.translation)
             _, torques = subscriber.left.get_torque()
-            print torques
+            print(torques)
             if torques[1] > 0.001:
                 logging.info('Detected collision!!!!!!')
                 robot.set_z('fine')
@@ -211,7 +211,7 @@ def init_robot(config):
                 subscriber.stop()
             logging.error(str(ymc))
             logging.error('Failed to initialize YuMi. Check the FlexPendant and connection to the YuMi.')
-            human_input = raw_input('Hit [ENTER] when YuMi is ready')
+            human_input = input('Hit [ENTER] when YuMi is ready')
     return robot, subscriber, left_arm, right_arm, home_pose
 
 def run_experiment():
@@ -254,7 +254,7 @@ def run_experiment():
             re_try = False
         
         rospy.loginfo('Please place object: ' + obj + ' on the workspace.')
-        raw_input("Press ENTER when ready ...")
+        input("Press ENTER when ready ...")
         # start the next trial
         rospy.loginfo('Trial %d' % (trial_number))
 
@@ -296,10 +296,10 @@ def run_experiment():
             lift_gripper_width, T_gripper_world = process_GQCNNGrasp(planned_grasp_data, robot, left_arm, right_arm, subscriber, home_pose, config)
 
             # get human label
-            human_input = raw_input('Grasp success, or grasp failure? [s/f] ')
+            human_input = input('Grasp success, or grasp failure? [s/f] ')
             while human_input.lower() != 's' and human_input.lower() != 'f':
                 logging.info('Did not understand input. Please answer \'s\' or \'f\'')
-                human_input = raw_input('Grasp success, or grasp failure? [s/f] ')
+                human_input = input('Grasp success, or grasp failure? [s/f] ')
             if human_input.lower() == 's':
                 experiment_logger.update_trial_attribute('human_label', 1)
             else:

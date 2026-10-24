@@ -26,13 +26,15 @@ Author: Vishal Satish
 from setuptools import setup
 
 requirements = [
-	'tensorflow>=1.0',
-	'numpy',
-	'matplotlib',
-	'opencv-python',
-	'scipy',
-	'scikit-image',
-	'scikit-learn'
+	'tensorflow>=2.16',
+	'numpy>=1.26',
+	'matplotlib>=3.8',
+	'opencv-python>=4.10',
+	'pyyaml>=6.0',
+	'scipy>=1.11',
+	'scikit-image>=0.22',
+	'scikit-learn>=1.5',
+	'autolab_perception'
 ]
 
 setup(name='gqcnn', 
@@ -42,4 +44,6 @@ setup(name='gqcnn',
 	  author_email='vsatish@berkeley.edu', 
 	  package_dir={'': '.'}, 
 	  packages=['gqcnn'], 
-	  install_requires=requirements)
+	  python_requires='>=3.10',
+	  install_requires=requirements,
+	  extras_require={'train': ['ipython>=8.10']})

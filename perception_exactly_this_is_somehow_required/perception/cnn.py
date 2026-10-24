@@ -4,7 +4,8 @@ Author: Jeff Mahler
 """
 import numpy as np
 import os
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 class AlexNetWeights(object):
     """ Struct helper for storing weights """
@@ -78,7 +79,7 @@ class AlexNet(object):
         self._output_layer = config['out_layer']
         self._feature_layer = config['feature_layer']
         self._out_size = None
-        if 'out_size' in config.keys():
+        if 'out_size' in list(config.keys()):
             self._out_size = config['out_size']
         self._input_arr = np.zeros([self._batch_size, self._im_height,
                                     self._im_width, self._num_channels])

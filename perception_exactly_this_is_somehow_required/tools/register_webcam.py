@@ -28,7 +28,7 @@ if __name__ == '__main__':
     T_cb_world = RigidTransform.load(config['chessboard_tf'])
 
     # Get camera sensor object
-    for sensor_frame, sensor_data in config['sensors'].iteritems():
+    for sensor_frame, sensor_data in config['sensors'].items():
         logging.info('Registering {}'.format(sensor_frame))
         sensor_config = sensor_data['sensor_config']
         reg_cfg = sensor_data['registration_config'].copy()

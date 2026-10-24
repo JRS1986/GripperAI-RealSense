@@ -222,12 +222,12 @@ if __name__ == '__main__':
     
     plt.figure(figsize=(8,8))
     compare_config = config['compare']
-    num_colors = len(compare_config.values())
-    for model_prefix, label in compare_config.iteritems():
+    num_colors = len(list(compare_config.values()))
+    for model_prefix, label in compare_config.items():
         logging.info('Plotting %s' %(model_prefix))
         color = cm(1.*i / num_colors)
         analysis = None
-        for model_name, model_analysis in analyses.iteritems():
+        for model_name, model_analysis in analyses.items():
             if model_name.startswith(model_prefix):
                 analysis = model_analysis
                 break
@@ -244,11 +244,11 @@ if __name__ == '__main__':
     
     # plot
     i = 0
-    num_colors = len(analyses.values())
+    num_colors = len(list(analyses.values()))
     cm = plt.get_cmap('gist_rainbow')
     
     plt.figure(figsize=(12,12))
-    for model_name, analysis in analyses.iteritems():
+    for model_name, analysis in analyses.items():
         logging.info('Plotting %s' %(model_name))
         color = cm(1.*i / num_colors)
         analysis.plot_norm_val_errors(color=color,

@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import pyrealsense2 as rs
 #from PyQt5 import QtWidgets, QtCore
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 import threading
 
 class ShowVideo(QtCore.QObject):
@@ -115,4 +115,4 @@ if __name__ == '__main__':
 #    main_window.show()
 
     # and this is the magic sauce that adds in a loop
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

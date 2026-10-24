@@ -3,7 +3,7 @@ Finetunes a CNN for classification on a custom dataset using keras
 Author: Jeff Mahler
 """
 import argparse
-import cPickle as pkl
+import pickle as pkl
 import logging
 import IPython
 import numpy as np
@@ -45,7 +45,7 @@ def finetune_classification_cnn(config):
     debug = config['debug']
 
     num_classes = None
-    if 'num_classes' in config.keys():
+    if 'num_classes' in list(config.keys()):
         num_classes = config['num_classes']
 
     batch_size = config['training']['batch_size']
@@ -61,16 +61,16 @@ def finetune_classification_cnn(config):
     train_config = config['training']
 
     generator_image_shape = None
-    if 'image_shape' in data_aug_config.keys():
+    if 'image_shape' in list(data_aug_config.keys()):
         generator_image_shape = data_aug_config['image_shape']
     optimizer_name = optimization_config['optimizer']
 
     model_params = {}
-    if 'params' in model_config.keys():
+    if 'params' in list(model_config.keys()):
         model_params = model_config['params']
     
     base_model_params = {}
-    if 'params' in base_model_config.keys():
+    if 'params' in list(base_model_config.keys()):
         base_model_params = base_model_config['params']
 
     if debug:

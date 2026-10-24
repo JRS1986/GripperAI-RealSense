@@ -5,19 +5,15 @@ Author: Jeff Mahler
 from setuptools import setup
 
 requirements = [
-    'scipy',
-    'autolab_core',
-    'matplotlib',
-    'multiprocess',
-    'opencv-python',
-    'keras',
-    'cycler',
-    'Pillow',
-    'pyserial>=3.4',
-    'ipython==5.5.0',
-    'scikit-image',
-    'scikit-learn',
-    'scikit-video'
+    'numpy>=1.26',
+    'scipy>=1.11',
+    'autolab_core>=1.1',
+    'matplotlib>=3.8',
+    'opencv-python>=4.10',
+    'Pillow>=10.3',
+    'pypng',
+    'scikit-image>=0.22',
+    'scikit-learn>=1.5',
 ]
 
 exec(open('perception/version.py').read())
@@ -34,15 +30,16 @@ setup(name='autolab_perception',
           'Development Status :: 4 - Beta',
           'License :: OSI Approved :: Apache Software License',
           'Programming Language :: Python',
-          'Programming Language :: Python :: 2.7',
-          'Programming Language :: Python :: 3.5',
-          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3',
           'Natural Language :: English',
           'Topic :: Scientific/Engineering'
       ],
       packages=['perception'],
       install_requires = requirements,
-      extras_require = { 'docs' : [
+      python_requires = '>=3.10',
+      extras_require = { 'video' : ['scikit-video'],
+                         'serial' : ['pyserial>=3.4'],
+                         'docs' : [
                             'sphinx',
                             'sphinxcontrib-napoleon',
                             'sphinx_rtd_theme'

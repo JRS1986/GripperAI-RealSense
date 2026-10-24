@@ -19,20 +19,20 @@ PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED
 HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE
 MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
-from neural_networks import GQCNN
-from sgd_optimizer import SGDOptimizer
-from optimizer_constants import ImageMode, TrainingMode, PreprocMode, InputDataMode, GeneralConstants, ImageFileTemplates
-from train_stats_logger import TrainStatsLogger
-from learning_analysis import ClassificationResult, RegressionResult, ConfusionMatrix
-from gqcnn_analyzer import GQCNNAnalyzer
+from .neural_networks import GQCNN
+from .sgd_optimizer import SGDOptimizer
+from .optimizer_constants import ImageMode, TrainingMode, PreprocMode, InputDataMode, GeneralConstants, ImageFileTemplates
+from .train_stats_logger import TrainStatsLogger
+from .learning_analysis import ClassificationResult, RegressionResult, ConfusionMatrix
+from .gqcnn_analyzer import GQCNNAnalyzer
 
-from grasp import Grasp2D, SuctionPoint2D
-from visualizer import Visualizer
-from grasp_quality_function import GraspQualityFunction, SuctionQualityFunction, BestFitPlanaritySuctionQualityFunction, ApproachPlanaritySuctionQualityFunction, GQCnnQualityFunction, GraspQualityFunctionFactory
-from policy_exceptions import NoValidGraspsException, NoAntipodalPairsFoundException
-from image_grasp_sampler import ImageGraspSampler, AntipodalDepthImageGraspSampler, DepthImageSuctionPointSampler, ImageGraspSamplerFactory
-from policy import Policy, GraspingPolicy, UniformRandomGraspingPolicy, RobustGraspingPolicy, CrossEntropyRobustGraspingPolicy, QFunctionRobustGraspingPolicy, EpsilonGreedyQFunctionRobustGraspingPolicy, RgbdImageState, GraspAction, ParallelJawGrasp
-from gqcnn_prediction_visualizer import GQCNNPredictionVisualizer
+from .grasp import Grasp2D, SuctionPoint2D
+from .visualizer import Visualizer
+from .grasp_quality_function import GraspQualityFunction, SuctionQualityFunction, BestFitPlanaritySuctionQualityFunction, ApproachPlanaritySuctionQualityFunction, GQCnnQualityFunction, GraspQualityFunctionFactory
+from .policy_exceptions import NoValidGraspsException, NoAntipodalPairsFoundException
+from .image_grasp_sampler import ImageGraspSampler, AntipodalDepthImageGraspSampler, DepthImageSuctionPointSampler, ImageGraspSamplerFactory
+from .policy import Policy, GraspingPolicy, UniformRandomGraspingPolicy, RobustGraspingPolicy, CrossEntropyRobustGraspingPolicy, QFunctionRobustGraspingPolicy, EpsilonGreedyQFunctionRobustGraspingPolicy, RgbdImageState, GraspAction, ParallelJawGrasp
+from .gqcnn_prediction_visualizer import GQCNNPredictionVisualizer
 
 __all__ = ['GQCNN', 
            'SGDOptimizer',

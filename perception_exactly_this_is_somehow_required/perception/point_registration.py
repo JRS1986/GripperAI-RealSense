@@ -24,9 +24,8 @@ class RegistrationResult(object):
         self.T_source_target = T_source_target
         self.cost = cost
 
-class IterativeRegistrationSolver:
+class IterativeRegistrationSolver(metaclass=ABCMeta):
     """ Abstract class for iterative registration solvers. """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def register(self, source_point_cloud, target_point_cloud,

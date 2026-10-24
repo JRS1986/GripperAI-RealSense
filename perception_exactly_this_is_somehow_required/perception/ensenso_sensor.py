@@ -2,7 +2,6 @@
 Interface to the Ensenso N* Sensor
 Author: Jeff Mahler
 """
-import IPython
 import logging
 import numpy as np
 import os

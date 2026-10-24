@@ -28,7 +28,7 @@ Author
 Jeff Mahler
 """
 import argparse
-import cPickle as pkl
+import pickle as pkl
 import logging
 import IPython
 import numpy as np

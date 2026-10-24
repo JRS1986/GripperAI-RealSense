@@ -18,6 +18,6 @@ if __name__ == '__main__':
     weight_sensor = WeightSensor()
     weight_sensor.start()    
     for i in range(10000):
-        print 'Total weight:', weight_sensor.total_weight()
+        print('Total weight:', weight_sensor.total_weight())
         time.sleep(0.1)
     weight_sensor.stop()

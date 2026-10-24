@@ -3,7 +3,6 @@ Lean classes to encapculate images
 Author: Jeff
 """
 from abc import ABCMeta, abstractmethod
-import IPython
 import logging
 import os
 
@@ -12,20 +11,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import PIL.Image as PImage
 
-import scipy.misc as sm
 import scipy.signal as ssg
-import scipy.ndimage.filters as sf
-import scipy.ndimage.interpolation as sni
-import scipy.ndimage.morphology as snm
+import scipy.ndimage as sf
+import scipy.ndimage as sni
+import scipy.ndimage as snm
 import scipy.spatial.distance as ssd
 import scipy.signal as ssg
 
 import sklearn.cluster as sc
 import sklearn.mixture as smx
-import scipy.ndimage.filters as sf
+import scipy.ndimage as sf
 import scipy.spatial.distance as ssd
 import skimage.morphology as morph
-import scipy.ndimage.morphology as snm
+import scipy.ndimage as snm
 
 from autolab_core import PointCloud, NormalCloud, PointNormalCloud, Box, Contour
 from .constants import *
@@ -37,14 +35,39 @@ except Exception:
     logging.warning(
         'autolab_perception is not installed as a catkin package - ROS msg conversions will not be available for image wrappers')
 
+def imresize(arr, size, interp='bilinear', mode=None):
+    """Drop-in replacement for ``scipy.misc.imresize`` (removed in SciPy 1.3).
+
+    Follows the original semantics: an int ``size`` is a percentage, a float
+    is a scale factor and a tuple is the output (height, width). Without
+    ``mode='F'`` the result is converted to uint8 like the original.
+    """
+    arr = np.asarray(arr)
+    if mode == 'F':
+        im = PImage.fromarray(arr.astype(np.float32))
+    else:
+        if arr.dtype != np.uint8:
+            cmin, cmax = float(arr.min()), float(arr.max())
+            scale = 255.0 / (cmax - cmin) if cmax > cmin else 1.0
+            arr = ((arr - cmin) * scale).clip(0, 255).astype(np.uint8)
+        im = PImage.fromarray(arr)
+    if isinstance(size, (int, np.integer)):
+        size = tuple((np.array(im.size) * (size / 100.0)).astype(int))
+    elif isinstance(size, (float, np.floating)):
+        size = tuple((np.array(im.size) * size).astype(int))
+    else:
+        size = (int(size[1]), int(size[0]))
+    resample = {'nearest': 0, 'lanczos': 1, 'bilinear': 2, 'bicubic': 3, 'cubic': 3}[interp]
+    return np.array(im.resize(size, resample=resample))
+
+
 BINARY_IM_MAX_VAL = np.iinfo(np.uint8).max
-BINARY_IM_DEFAULT_THRESH = BINARY_IM_MAX_VAL / 2
+BINARY_IM_DEFAULT_THRESH = BINARY_IM_MAX_VAL // 2
 
 
-class Image(object):
+class Image(object, metaclass=ABCMeta):
     """Abstract wrapper class for images.
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, data, frame='unspecified'):
         """Create an image from an array of data.
@@ -72,7 +95,7 @@ class Image(object):
         """
         if not isinstance(data, np.ndarray):
             raise ValueError('Must initialize image with a numpy ndarray')
-        if not isinstance(frame, str) and not isinstance(frame, unicode):
+        if not isinstance(frame, str) and not isinstance(frame, str):
             raise ValueError('Must provide string name of frame of data')
 
         self._check_valid_data(data)
@@ -131,7 +154,7 @@ class Image(object):
         """:obj:`numpy.ndarray` of int : The xy indices of the center of the
         image.
         """
-        return np.array([self.height / 2, self.width / 2])
+        return np.array([self.height // 2, self.width // 2])
 
     @property
     def channels(self):
@@ -310,7 +333,7 @@ class Image(object):
         trans_map = np.float32(
             [[1, 0, translation[1]], [0, 1, translation[0]]])
         rot_map = cv2.getRotationMatrix2D(
-            (self.center[1], self.center[0]), theta, 1)
+            (float(self.center[1]), float(self.center[0])), theta, 1)
         trans_map_aff = np.r_[trans_map, [[0, 0, 1]]]
         rot_map_aff = np.r_[rot_map, [[0, 0, 1]]]
         full_map = rot_map_aff.dot(trans_map_aff)
@@ -403,7 +426,7 @@ class Image(object):
             A 2D ndarray whose first entry is the list of row indices
             and whose second entry is the list of column indices.
         """
-        return np.c_[linear_inds / self.width, linear_inds % self.width]
+        return np.c_[linear_inds // self.width, linear_inds % self.width]
 
     def is_same_shape(self, other_im, check_channels=False):
         """ Checks if two images have the same height and width (and optionally channels).
@@ -707,14 +730,14 @@ class Image(object):
             within the crop box.
         """
         if center_i is None:
-            center_i = self.height / 2
+            center_i = self.height // 2
         if center_j is None:
-            center_j = self.width / 2
+            center_j = self.width // 2
 
-        start_row = int(max(0, center_i - height / 2))
-        end_row = int(min(self.height - 1, center_i + height / 2))
-        start_col = int(max(0, center_j - width / 2))
-        end_col = int(min(self.width - 1, center_j + width / 2))
+        start_row = int(max(0, center_i - height // 2))
+        end_row = int(min(self.height - 1, center_i + height // 2))
+        start_col = int(max(0, center_j - width // 2))
+        end_col = int(min(self.width - 1, center_j + width // 2))
 
         focus_data = np.zeros(self._data.shape)
         focus_data[start_row:end_row + 1, start_col:end_col + \
@@ -1073,7 +1096,7 @@ class ColorImage(Image):
         :obj:`ColorImage`
             The resized image.
         """
-        resized_data = sm.imresize(self.data, size, interp=interp)
+        resized_data = imresize(self.data, size, interp=interp)
         return ColorImage(resized_data, self._frame)
 
     def find_chessboard(self, sx=6, sy=9):
@@ -1245,7 +1268,7 @@ class ColorImage(Image):
 
         # generate histograms for each channel
         bounds = (0, np.iinfo(np.uint8).max + 1)
-        num_bins = bounds[1] / scale
+        num_bins = bounds[1] // scale
         r_hist, _ = np.histogram(r_data, bins=num_bins, range=bounds)
         g_hist, _ = np.histogram(g_data, bins=num_bins, range=bounds)
         b_hist, _ = np.histogram(b_data, bins=num_bins, range=bounds)
@@ -1541,7 +1564,7 @@ class DepthImage(Image):
         :obj:`DepthImage`
             The resized image.
         """
-        resized_data = sm.imresize(self.data, size, interp=interp, mode='F')
+        resized_data = imresize(self.data, size, interp=interp, mode='F')
         return DepthImage(resized_data, self._frame)
 
     def threshold(self, front_thresh=0.0, rear_thresh=100.0):
@@ -1923,7 +1946,7 @@ class IrImage(Image):
         :obj:`IrImage`
             The resized image.
         """
-        resized_data = sm.imresize(self._data, size, interp=interp)
+        resized_data = imresize(self._data, size, interp=interp)
         return IrImage(resized_data, self._frame)
 
     @staticmethod
@@ -2029,7 +2052,7 @@ class GrayscaleImage(Image):
         :obj:`GrayscaleImage`
             The resized image.
         """
-        resized_data = sm.imresize(self.data, size, interp=interp)
+        resized_data = imresize(self.data, size, interp=interp)
         return GrayscaleImage(resized_data, self._frame)
 
     def to_color(self):
@@ -2154,7 +2177,7 @@ class BinaryImage(Image):
         :obj:`BinaryImage`
             The resized image.
         """
-        resized_data = sm.imresize(self.data, size, interp=interp)
+        resized_data = imresize(self.data, size, interp=interp)
         return BinaryImage(resized_data, self._frame)
 
     def mask_binary(self, binary_im):
@@ -2225,7 +2248,7 @@ class BinaryImage(Image):
         contours, hierarchy = cv2.findContours(
             self.data.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         num_contours = len(contours)
-        middle_pixel = np.array(self.shape)[:2] / 2
+        middle_pixel = np.array(self.shape)[:2] // 2
         middle_pixel = middle_pixel.reshape(1, 2)
         center_contour = None
         pruned_contours = []
@@ -2391,7 +2414,7 @@ class BinaryImage(Image):
         """
 
         # create circular structure for checking clearance
-        y, x = np.meshgrid(np.arange(w) - w / 2, np.arange(w) - w / 2)
+        y, x = np.meshgrid(np.arange(w) - w // 2, np.arange(w) - w // 2)
         cur_px_y = np.ravel(y + start[0]).astype(np.uint16)
         cur_px_x = np.ravel(x + start[1]).astype(np.uint16)
         
@@ -2451,7 +2474,7 @@ class BinaryImage(Image):
             exists some non-zero pixel within a radius w.
         """
         # create circular structure for checking clearance
-        y, x = np.meshgrid(np.arange(w) - w / 2, np.arange(w) - w / 2)
+        y, x = np.meshgrid(np.arange(w) - w // 2, np.arange(w) - w // 2)
 
         cur_px_y = np.ravel(y + pixel[0]).astype(np.uint16)
         cur_px_x = np.ravel(x + pixel[1]).astype(np.uint16)
@@ -2507,7 +2530,7 @@ class BinaryImage(Image):
             exists all zero pixels within a radius w.
         """
         # create circular structure for checking clearance
-        y, x = np.meshgrid(np.arange(w) - w / 2, np.arange(w) - w / 2)
+        y, x = np.meshgrid(np.arange(w) - w // 2, np.arange(w) - w // 2)
 
         cur_px_y = np.ravel(y + pixel[0]).astype(np.uint16)
         cur_px_x = np.ravel(x + pixel[1]).astype(np.uint16)
@@ -3260,7 +3283,7 @@ class SegmentationImage(Image):
             Interpolation to use for re-sizing ('nearest', 'lanczos', 'bilinear',
             'bicubic', or 'cubic')
         """
-        resized_data = sm.imresize(self.data, size, interp=interp, mode='L')
+        resized_data = imresize(self.data, size, interp=interp, mode='L')
         return SegmentationImage(resized_data, self._frame)
 
     @staticmethod
@@ -3346,9 +3369,9 @@ class PointCloudImage(Image):
         :obj:`PointCloudImage`
             The resized image.
         """
-        resized_data_0 = sm.imresize(self._data[:,:,0], size, interp=interp, mode='F')
-        resized_data_1 = sm.imresize(self._data[:,:,1], size, interp=interp, mode='F')
-        resized_data_2 = sm.imresize(self._data[:,:,2], size, interp=interp, mode='F')
+        resized_data_0 = imresize(self._data[:,:,0], size, interp=interp, mode='F')
+        resized_data_1 = imresize(self._data[:,:,1], size, interp=interp, mode='F')
+        resized_data_2 = imresize(self._data[:,:,2], size, interp=interp, mode='F')
         resized_data = np.zeros([resized_data_0.shape[0],
                                  resized_data_0.shape[1],
                                  self.channels])

@@ -32,7 +32,7 @@ class RealSenseRegistrationMode:
 
 
 class RealSenseSensor(CameraSensor):
-    """Class for interacting with a RealSense D400-series sensor.
+    r"""Class for interacting with a RealSense D400-series sensor.
 
     pyrealsense2 should be installed from source with the following
     commands:

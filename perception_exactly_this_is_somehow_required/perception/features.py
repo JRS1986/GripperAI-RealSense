@@ -6,13 +6,12 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-class Feature:
+class Feature(metaclass=ABCMeta):
     """ Abstract class for features """
-    __metaclass__ = ABCMeta
     def __init__(self):
         pass
 
-class LocalFeature(Feature):
+class LocalFeature(Feature, metaclass=ABCMeta):
     """ Local (e.g. pointwise) features on shape surfaces.
 
     Attributes
@@ -26,7 +25,6 @@ class LocalFeature(Feature):
     normal : :obj:`numpy.ndarray`
         3D surface normal on shape surface at corresponding point
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, descriptor, rf, point, normal):
         self.descriptor_ = descriptor
@@ -50,7 +48,7 @@ class LocalFeature(Feature):
     def normal(self):
         return self.normal_
 
-class GlobalFeature(Feature):
+class GlobalFeature(Feature, metaclass=ABCMeta):
     """ Global features of a full shape surface.
 
     Attributes
@@ -62,7 +60,6 @@ class GlobalFeature(Feature):
     pose : :obj:`autolab_core.RigidTransform`
         pose of object for the descriptor, if relevant
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, key, descriptor, pose=None):
         self.key_ = key

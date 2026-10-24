@@ -23,7 +23,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 Class for analyzing a GQCNN model for grasp quality prediction
 Author: Jeff Mahler
 """
-import cPickle as pkl
+import pickle as pkl
 import copy
 import json
 import logging
@@ -33,14 +33,14 @@ import os
 import random
 import shutil
 from skimage.feature import hog
-import scipy.misc as sm
+from perception.image import imresize
 import sys
 import time
 
 import autolab_core.utils as utils
 from gqcnn import GQCNN
 
-from optimizer_constants import InputDataMode, ImageMode, ImageFileTemplates
+from .optimizer_constants import InputDataMode, ImageMode, ImageFileTemplates
 
 class GQCNNAnalyzer(object):
     """ Analyzes GQCNN models """
@@ -124,7 +124,7 @@ class GQCNNAnalyzer(object):
             plt.clf()
             for k in range(num_filt):
                 filt = conv1_filters[:,:,0,k]
-                filt = sm.imresize(filt, 5.0, interp='nearest', mode='F')
+                filt = imresize(filt, 5.0, interp='nearest', mode='F')
                 plt.subplot(d,d,k+1)
                 plt.imshow(filt, cmap=plt.cm.gray, interpolation='nearest')
                 plt.axis('off')
@@ -226,12 +226,12 @@ class GQCNNAnalyzer(object):
             # break into training / val
             index_im_filename = im_filename
             new_train_indices = {}
-            for key in train_indices.keys():
+            for key in list(train_indices.keys()):
                 new_train_indices[os.path.join(model_training_dataset_dir, key)] = train_indices[key]
             train_indices = new_train_indices
 
             new_val_indices = {}
-            for key in val_indices.keys():
+            for key in list(val_indices.keys()):
                 new_val_indices[os.path.join(model_training_dataset_dir, key)] = val_indices[key]
             val_indices = new_val_indices
 
@@ -264,7 +264,7 @@ class GQCNNAnalyzer(object):
         self.val_class_results = {}
         self.results = {}
 
-        for model_name, model_data in self.models.iteritems():
+        for model_name, model_data in self.models.items():
             logging.info('Analyzing model: %s' %(model_name))
             model_output_dir = os.path.join(output_dir, model_name)
             train_result, val_result = self._run_prediction_single_model(model_output_dir,
@@ -290,7 +290,7 @@ class GQCNNAnalyzer(object):
         # get stats, plot curves
         plt.clf()
         i = 0
-        for model_name in self.models.keys():
+        for model_name in list(self.models.keys()):
             model_tag = self.models[model_name]['tag']
             train_class_result = self.train_class_results[model_tag]
             logging.info('Model %s training error rate: %.3f' %(model_name, train_class_result.error_rate))
@@ -304,7 +304,7 @@ class GQCNNAnalyzer(object):
         plt.savefig(figname, dpi=self.dpi)
         plt.clf()
         i = 0
-        for model_name in self.models.keys():
+        for model_name in list(self.models.keys()):
             model_tag = self.models[model_name]['tag']
             train_class_result = self.train_class_results[model_tag]
             train_class_result.roc_curve(plot=True, color=colors[i%num_colors],
@@ -318,7 +318,7 @@ class GQCNNAnalyzer(object):
 
         plt.clf()
         i = 0
-        for model_name in self.models.keys():
+        for model_name in list(self.models.keys()):
             model_tag = self.models[model_name]['tag']
             val_class_result = self.val_class_results[model_tag]
             logging.info('Model %s validation error rate: %.3f' %(model_name, val_class_result.error_rate))
@@ -333,7 +333,7 @@ class GQCNNAnalyzer(object):
 
         plt.clf()
         i = 0
-        for model_name in self.models.keys():
+        for model_name in list(self.models.keys()):
             model_tag = self.models[model_name]['tag']
             val_class_result = self.val_class_results[model_tag]
             val_class_result.roc_curve(plot=True, color=colors[i%num_colors],
@@ -348,7 +348,7 @@ class GQCNNAnalyzer(object):
         # combined training and validation precision-recall curves plot
         plt.clf()
         i = 0
-        for model_name in self.models.keys():
+        for model_name in list(self.models.keys()):
             model_tag = self.models[model_name]['tag']
             train_class_result = self.train_class_results[model_tag]
             if model_tag is None:
@@ -358,7 +358,7 @@ class GQCNNAnalyzer(object):
                 train_class_result.precision_recall_curve(plot=True, color=colors[i%num_colors],
                                       style=styles[i%num_styles], label='Training ' + model_tag)
             i += 1
-        for model_name in self.models.keys():
+        for model_name in list(self.models.keys()):
             model_tag = self.models[model_name]['tag']
             val_class_result = self.val_class_results[model_tag]
             if model_tag is None:
@@ -379,7 +379,7 @@ class GQCNNAnalyzer(object):
         # combined training and validation roc curves plot
         plt.clf()
         i = 0
-        for model_name in self.models.keys():
+        for model_name in list(self.models.keys()):
             model_tag = self.models[model_name]['tag']
             train_class_result = self.train_class_results[model_tag]
             if model_tag is None:
@@ -389,7 +389,7 @@ class GQCNNAnalyzer(object):
                 train_class_result.roc_curve(plot=True, color=colors[i%num_colors],
                                          style=styles[i%num_styles], label='Training' + model_tag)
             i += 1
-        for model_name in self.models.keys():
+        for model_name in list(self.models.keys()):
             model_tag = self.models[model_name]['tag']
             val_class_result = self.val_class_results[model_tag]
             if model_tag is None:
@@ -408,7 +408,7 @@ class GQCNNAnalyzer(object):
 
         # plot histogram of prediction errors
         if self.vis_histograms:
-            for model_name in self.models.keys():
+            for model_name in list(self.models.keys()):
                 model_output_dir = os.path.join(output_dir, model_name)
                 train_result = self.train_class_results[model_tag]
                 val_result = self.val_class_results[model_tag]

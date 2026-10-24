@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
+import os
 import sys
 import pyrealsense2 as rs
 #from PyQt5 import QtWidgets, QtCore
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 def test_advanced_mode():
     ## License: Apache 2.0. See LICENSE file in root directory.
     ## Copyright(c) 2017 Intel Corporation. All Rights Reserved.
@@ -45,18 +46,10 @@ def test_advanced_mode():
             dev = find_device_that_supports_advanced_mode()
             advnc_mode = rs.rs400_advanced_mode(dev)
             print("Advanced mode is", "enabled" if advnc_mode.is_enabled() else "disabled")
-        optionfile = "/home/jasy/FDexter/RealSense/garnichtsoschlechtesetting.json"
-        #optionfile = "/home/jasy/FDexter/RealSense/holefilletc.json"
+        optionfile = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "garnichtsoschlechtesetting.json")
         with open(optionfile, "r") as read_file:
-            print('oh')
             settings = json.load(read_file)
-            #settings = read_file
-            print(settings)
-            #json_string = str(settings).replace('u', 'bla')
-            if type(next(iter(settings))) != str:
-                settings_ = {k.encode('utf-8'): v.encode("utf-8") for k, v in settings.items()}
-            json_string = str(settings_).replace("'", '\"')
-            advnc_mode.load_json(json_string)
+            advnc_mode.load_json(json.dumps(settings))
        # # Get each control's current value
         #print("Depth Control: \n", advnc_mode.get_depth_control())
        # print("RSM: \n", advnc_mode.get_rsm())
@@ -152,4 +145,4 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     myg = MyGui()
     myg.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

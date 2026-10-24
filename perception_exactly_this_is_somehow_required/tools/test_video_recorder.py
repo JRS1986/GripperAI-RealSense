@@ -18,7 +18,7 @@ if __name__ == '__main__':
     sensor = WebcamSensor(device_id=0)
 
     recorder = VideoRecorder(sensor)
-    print 'recording'
+    print('recording')
     recorder.start()
     recorder.start_recording('test.mp4')
     time.sleep(10)

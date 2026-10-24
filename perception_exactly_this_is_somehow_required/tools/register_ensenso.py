@@ -142,7 +142,7 @@ def register_ensenso(config):
         y.right.goto_pose(T_gripper_world)
         
         # wait for human measurement
-        yesno = raw_input('Take measurement. Hit [ENTER] when done')
+        yesno = input('Take measurement. Hit [ENTER] when done')
         y.right.goto_pose(T_gripper_world_lift)
         y.reset_home()
         y.stop()
