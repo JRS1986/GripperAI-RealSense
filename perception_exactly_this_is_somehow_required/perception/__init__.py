@@ -64,7 +64,10 @@ try:
 except:
     logging.warning('Unable to import weight sensor modules!')
 
-from .video_recorder import VideoRecorder
+try:
+    from .video_recorder import VideoRecorder
+except Exception:
+    logging.warning('Unable to import VideoRecorder! Install scikit-video to use it.')
 
 __all__ = [
     'CameraIntrinsics',

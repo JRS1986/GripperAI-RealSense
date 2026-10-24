@@ -31,12 +31,12 @@ import json
 import logging
 import numbers
 import numpy as np
-import cPickle as pkl
+import pickle as pkl
 import os
 import random
-import scipy.misc as sm
-import scipy.ndimage.filters as sf
-import scipy.ndimage.morphology as snm
+from perception.image import imresize
+import scipy.ndimage as sf
+import scipy.ndimage as snm
 import scipy.stats as ss
 import skimage.draw as sd
 import signal
@@ -44,19 +44,19 @@ import sys
 import shutil
 import threading
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import matplotlib.pyplot as plt
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import yaml
 from autolab_core import YamlConfig
 import autolab_core.utils as utils
 import collections
 
-import IPython
 
-from learning_analysis import ClassificationResult, RegressionResult
-from optimizer_constants import ImageMode, TrainingMode, PreprocMode, InputDataMode, GeneralConstants, ImageFileTemplates
-from train_stats_logger import TrainStatsLogger
+from .learning_analysis import ClassificationResult, RegressionResult
+from .optimizer_constants import ImageMode, TrainingMode, PreprocMode, InputDataMode, GeneralConstants, ImageFileTemplates
+from .train_stats_logger import TrainStatsLogger
 
 NUM_FILES_DEBUG = 230
 
@@ -137,7 +137,7 @@ class SGDOptimizer(object):
             self.sess.close()
             
             # cleanup
-            for layer_weights in self.weights.__dict__.values():
+            for layer_weights in list(self.weights.__dict__.values()):
                 del layer_weights
             del self.saver
             del self.sess
@@ -162,10 +162,10 @@ class SGDOptimizer(object):
 
         # read and setup dropouts from config
         drop_fc3 = False
-        if 'drop_fc3' in self.cfg.keys() and self.cfg['drop_fc3']:
+        if 'drop_fc3' in list(self.cfg.keys()) and self.cfg['drop_fc3']:
             drop_fc3 = True
         drop_fc4 = False
-        if 'drop_fc4' in self.cfg.keys() and self.cfg['drop_fc4']:
+        if 'drop_fc4' in list(self.cfg.keys()) and self.cfg['drop_fc4']:
             drop_fc4 = True
         
         fc3_drop_rate = self.cfg['fc3_drop_rate']
@@ -197,7 +197,7 @@ class SGDOptimizer(object):
                     loss = self._create_loss()
 
             # part 2: regularization
-            layer_weights = self.weights.__dict__.values()
+            layer_weights = list(self.weights.__dict__.values())
             with tf.name_scope('regularization'):
                 regularizers = tf.nn.l2_loss(layer_weights[0])
                 for w in layer_weights[1:]:
@@ -214,11 +214,11 @@ class SGDOptimizer(object):
             staircase=True)
 
         # setup variable list
-        var_list = self.weights.__dict__.values()
+        var_list = list(self.weights.__dict__.values())
         if self.cfg['fine_tune'] and self.cfg['update_fc_only']:
-            var_list = [v for k, v in self.weights.__dict__.iteritems() if k.find('conv') == -1]
+            var_list = [v for k, v in self.weights.__dict__.items() if k.find('conv') == -1]
         elif self.cfg['fine_tune'] and self.cfg['update_conv0_only'] and self.use_conv0:
-            var_list = [v for k, v in self.weights.__dict__.iteritems() if k.find('conv0') > -1]
+            var_list = [v for k, v in self.weights.__dict__.items() if k.find('conv0') > -1]
 
         # create optimizer
         with tf.name_scope('optimizer'):
@@ -247,7 +247,7 @@ class SGDOptimizer(object):
             logging.info('Cleaning and Preparing to Exit Optimization')
                 
             # cleanup
-            for layer_weights in self.weights.__dict__.values():
+            for layer_weights in list(self.weights.__dict__.values()):
                 del layer_weights
             del self.saver
             del self.sess
@@ -278,7 +278,7 @@ class SGDOptimizer(object):
             self.train_stats_logger = TrainStatsLogger(self.experiment_dir)
 
             # loop through training steps
-            training_range = xrange(int(self.num_epochs * self.num_train) // self.train_batch_size)
+            training_range = range(int(self.num_epochs * self.num_train) // self.train_batch_size)
             for step in training_range:
                 # check for dead queue
                 self._check_dead_queue()
@@ -325,7 +325,7 @@ class SGDOptimizer(object):
                     train_error = l
                     if self.training_mode == TrainingMode.CLASSIFICATION:
                         if self.cfg['loss'] == 'weighted_cross_entropy':
-                            print predictions[0], batch_labels[0]
+                            print(predictions[0], batch_labels[0])
                             batch_labels = 1 * (batch_labels > self.metric_thresh)
                             batch_labels = batch_labels.astype(np.uint8)
                         train_error = ClassificationResult([predictions], [batch_labels]).error_rate
@@ -402,7 +402,7 @@ class SGDOptimizer(object):
             self.term_event.set()
             if not self.forceful_exit:
                 self.sess.close() 
-                for layer_weights in self.weights.__dict__.values():
+                for layer_weights in list(self.weights.__dict__.values()):
                     del layer_weights
                 del self.saver
                 del self.sess
@@ -429,7 +429,7 @@ class SGDOptimizer(object):
         self.sess.close()
             
         # cleanup
-        for layer_weights in self.weights.__dict__.values():
+        for layer_weights in list(self.weights.__dict__.values()):
             del layer_weights
         del self.saver
         del self.sess
@@ -531,7 +531,7 @@ class SGDOptimizer(object):
             # this assumes that a gqcnn was passed in that was initialized with weights from a model using GQCNN.load(), so all that has to
             # be done is to possibly reinitialize fc3/fc4/fc5
             reinit_pc1 = False
-            if 'reinit_pc1' in self.cfg.keys():
+            if 'reinit_pc1' in list(self.cfg.keys()):
                 reinit_pc1 = self.cfg['reinit_pc1']
             self.gqcnn.reinitialize_layers(self.cfg['reinit_fc3'], self.cfg['reinit_fc4'], self.cfg['reinit_fc5'], reinit_pc1=reinit_pc1)
         else:
@@ -664,6 +664,7 @@ class SGDOptimizer(object):
             np.save(self.pose_std_filename, self.pose_std)
 
         if np.any(np.isnan(self.pose_mean)) or np.any(np.isnan(self.pose_std)):
+            import IPython
             IPython.embed()
             exit(0)
             
@@ -949,7 +950,7 @@ class SGDOptimizer(object):
             pkl.dump(self.val_index_map, open(self.val_index_map_filename, 'w'))
 
         self.num_train = 0
-        for im_filename, train_indices in self.train_index_map.iteritems():
+        for im_filename, train_indices in self.train_index_map.items():
             self.num_train += train_indices.shape[0]
         self.decay_step = self.decay_step_multiplier * self.num_train
             
@@ -965,7 +966,7 @@ class SGDOptimizer(object):
         self.train_batch_size = self.cfg['train_batch_size']
         self.val_batch_size = self.cfg['val_batch_size']
         self.max_files_eval = None
-        if 'max_files_eval' in self.cfg.keys():
+        if 'max_files_eval' in list(self.cfg.keys()):
             self.max_files_eval = self.cfg['max_files_eval']
         
         # update the GQCNN's batch_size param to this one
@@ -994,7 +995,7 @@ class SGDOptimizer(object):
         self.preproc_mode = self.cfg['preproc_mode']
 
         self.pos_weight = 0.0
-        if 'pos_weight' in self.cfg.keys():
+        if 'pos_weight' in list(self.cfg.keys()):
             self.pos_weight = self.cfg['pos_weight']
             self.pos_accept_prob = 1.0
             self.neg_accept_prob = 1.0
@@ -1004,7 +1005,7 @@ class SGDOptimizer(object):
                 self.pos_accept_prob = self.pos_weight
                 
         self.neg_reject_rate = 0.0
-        if 'neg_reject_rate' in self.cfg.keys():
+        if 'neg_reject_rate' in list(self.cfg.keys()):
             self.neg_reject_rate = self.cfg['neg_reject_rate']
             
         if self.train_pct < 0 or self.train_pct > 1:
@@ -1175,7 +1176,7 @@ class SGDOptimizer(object):
 
         out_config_filename = os.path.join(self.experiment_dir, 'config.json')
         tempOrderedDict = collections.OrderedDict()
-        for key in self.cfg.keys():
+        for key in list(self.cfg.keys()):
             tempOrderedDict[key] = self.cfg[key]
         with open(out_config_filename, 'w') as outfile:
             json.dump(tempOrderedDict,
@@ -1331,7 +1332,7 @@ class SGDOptimizer(object):
                                                 self.im_width, self.im_channels]).astype(np.float32)
                 for i in range(self.num_images):
                     for c in range(train_data_arr.shape[3]):
-                        self.train_data_arr[i,:,:,c] = sm.imresize(train_data_arr[i,:,:,c],
+                        self.train_data_arr[i,:,:,c] = imresize(train_data_arr[i,:,:,c],
                                                                    rescale_factor,
                                                                    interp='bicubic', mode='F')
                 
@@ -1436,7 +1437,7 @@ class SGDOptimizer(object):
                 if np.random.rand() < self.cfg['gaussian_process_rate']:
                     train_image = self.train_data_arr[i,:,:,0]
                     gp_noise = ss.norm.rvs(scale=self.gp_sigma, size=self.gp_num_pix).reshape(self.gp_sample_height, self.gp_sample_width)
-                    gp_noise = sm.imresize(gp_noise, self.gp_rescale_factor, interp='bicubic', mode='F')
+                    gp_noise = imresize(gp_noise, self.gp_rescale_factor, interp='bicubic', mode='F')
                     train_image[train_image > 0] += gp_noise[train_image > 0]
                     self.train_data_arr[i,:,:,0] = train_image
 
@@ -1531,7 +1532,7 @@ class SGDOptimizer(object):
             validation error
         """
         error_rates = []
-        all_filenames = zip(self.im_filenames, self.pose_filenames, self.label_filenames)
+        all_filenames = list(zip(self.im_filenames, self.pose_filenames, self.label_filenames))
         random.shuffle(all_filenames)
         if num_files_eval is None:
             num_files_eval = self.max_files_eval

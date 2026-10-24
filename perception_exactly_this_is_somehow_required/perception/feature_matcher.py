@@ -51,7 +51,7 @@ class Correspondences:
     def __iter__(self):
         self.iter_count_ = 0
 
-    def next(self):
+    def __next__(self):
         if self.iter_count_ >= len(self.num_matches_):
             raise StopIteration
         else:
@@ -92,17 +92,16 @@ class NormalCorrespondences(Correspondences):
     def __iter__(self):
         self.iter_count_ = 0
 
-    def next(self):
+    def __next__(self):
         if self.iter_count_ >= len(self.num_matches_):
             raise StopIteration
         else:
             return self.source_points_[self.iter_count,:], self.target_points_[self.iter_count,:], self.source_normals_[self.iter_count,:], self.target_normals_[self.iter_count,:]
 
-class FeatureMatcher:
+class FeatureMatcher(metaclass=ABCMeta):
     """
     Generic feature matching between local features on a source and target object using nearest neighbors.
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self):
         pass

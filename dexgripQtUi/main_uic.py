@@ -17,12 +17,13 @@ import subprocess
 import queue
 import threading
 from collections import deque
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 #import User Interface for MainWindow, created via QtCreator
 from ui_mainwindow import Ui_MainWindow
 
 #parameters
-dexnet_loadpath = os.getcwd()+'/gqcnn_jeffbranch_adapted'
+repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+dexnet_loadpath = os.path.join(repo_root, 'gqcnn_jeffbranch_adapted')
 
 def test_advanced_mode():
     ## License: Apache 2.0. See LICENSE file in root directory.
@@ -64,20 +65,11 @@ def test_advanced_mode():
             dev = find_device_that_supports_advanced_mode()
             advnc_mode = rs.rs400_advanced_mode(dev)
             print("Advanced mode is", "enabled" if advnc_mode.is_enabled() else "disabled")
-        optionfile = os.getcwd()+"/garnichtsoschlechtesetting.json"
-        #optionfile = "/home/jasy/FDexter/RealSense/garnichtsoschlechtesetting.json"
-        #optionfile = "/home/jasy/FDexter/RealSense/holefilletc.json"
+        optionfile = os.path.join(repo_root, "garnichtsoschlechtesetting.json")
         with open(optionfile, "r") as read_file:
             settings = json.load(read_file)
-            #settings = read_file
             print('camera configuration sucessfully loaded')
-            #json_string = str(settings).replace('u', 'bla')
-            if type(next(iter(settings))) != str:
-                settings_ = {k.encode('utf-8'): v.encode("utf-8") for k, v in settings.items()}
-                json_string = str(settings_).replace("'", '\"')
-            else:
-                json_string = str(settings).replace("'", '\"')
-            advnc_mode.load_json(json_string)
+            advnc_mode.load_json(json.dumps(settings))
        # # Get each control's current value
         #print("Depth Control: \n", advnc_mode.get_depth_control())
        # print("RSM: \n", advnc_mode.get_rsm())
@@ -100,7 +92,7 @@ def preprocess_gq(color_im,depth_im,depth_im_mask = None):
         # to mask the relevant parts of the image, if a mask is available 
         depth_im = depth_im_dif
     #convert to pypng format
-    color_im = (65535*((color_im*color_im.min()/color_im.ptp())).astype(np.uint16))
+    color_im = (65535*((color_im*color_im.min()/np.ptp(color_im))).astype(np.uint16))
     color_im = np.reshape(color_im, (-1, color_im.shape[1]*3))
 #    import matplotlib.pyplot as plt
 #    plt.imshow(color_im)
@@ -146,41 +138,39 @@ def thread_dexnet(key):
         return dex_both_grasp_t, dex_both_grasp_q, dex_both_suc_t, dex_both_suc_q
 
 
+def run_policy_script(name):
+    # the policies run in a separate process (same venv) so TensorFlow memory is freed afterwards
+    process = subprocess.run([sys.executable, os.path.join(dexnet_loadpath, 'examples', name)],
+                             stdout=subprocess.PIPE, text=True)
+    print('output: ', process.stdout)
+    return process.stdout
+
+def parse_policy_output(output):
+    # the policy scripts print their result as the last line: space separated floats
+    lines = output.strip().splitlines()
+    return [float(v) for v in lines[-1].split()]
+
 def calc_grasp():
-    python3_command = "python " + dexnet_loadpath + "/examples/policy.py"  # launch your python2 script using bash
-    process = subprocess.call(python3_command.split())
-    #output, error = process.communicate()  # receive output from the python2 script
+    run_policy_script('policy.py')
 
 def calc_suc():
-    python3_command = "python " + dexnet_loadpath + "/examples/suction_policy.py"  # launch your python2 script using bash
-    process = subprocess.call(python3_command.split())
-    #output, error = process.communicate()
+    run_policy_script('suction_policy.py')
 
 def calc_both_grasp():
-    python3_command = "python " + dexnet_loadpath + "/examples/policy_both.py"  # launch your python2 script using bash
-    process = subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    print('output: ', output)
-    output = output.decode('ascii')
-    output = ''.join( c for c in output if  c not in '()' ).split(',')
+    output = run_policy_script('policy_both.py')
     try:
-        output = [float(v) for v in output]
-    except:
+        output = parse_policy_output(output)
+    except (IndexError, ValueError):
         print('No grasp found')
         return [0,0,0,0,0,0,0]
     print(output)
     return output
 
 def calc_both_suc():
-    python3_command = "python " + dexnet_loadpath + "/examples/suction_policy_both.py"  # launch your python2 script using bash
-    process = subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    print('output: ', output)
-    output = output.decode('ascii')
-    output = ''.join( c for c in output if  c not in '()' ).split(',')
+    output = run_policy_script('suction_policy_both.py')
     try:
-        output = [float(v) for v in output]
-    except:
+        output = parse_policy_output(output)
+    except (IndexError, ValueError):
         print('No suction point found')
         return [0,0,0,0,0]
     return output
@@ -212,24 +202,6 @@ class depthProcessor(QtCore.QThread):
     def return_dframe(self):
         self.dframeSignal.emit(self.depth_frame)
        # QtCore.QThread.msleep(30)
-
-class dexnetThread(QtCore.QThread):
-    #someSignal = QtCore.Signal(object)
-
-    def __init__(self):
-        super(dexnetThread,self).__init__()
-
-    @QtCore.Slot()
-    def run_dexnet_grasp(self):
-        #color_im =self.colorlabel.image
-        #depth_im =self.depthlabel.nparray
-        print('gotit!') 
-        python3_command = "python "+os.getcwd()+"/policy.py"  # launch your python2 script
-        #python3_command = "python /home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/examples/policy.py"  
-        # launch your python2 script using bash
-        process= subprocess.call(python3_command.split())
-        output, error = process.communicate()  # receive output from the python2 script
-        print(output,error)
 
 class videoThread(QtCore.QThread):
     pipeline = rs.pipeline()
@@ -463,26 +435,10 @@ class CameraView(QtWidgets.QMainWindow):
         if hasattr(self, 'pose_grasp'):
             del self.pose_grasp 
             self.grasp_drawn = False
-        config_grasp = os.getcwd() + '/policy_both.yaml'
-        config_suc = os.getcwd()+'/suction_policy_both.yaml'
-        #config_grasp = '/home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/cfg/examples/policy_both.yaml'
-        #config_suc = '/home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/cfg/examples/suction_policy_both.yaml'
+        # policy configs: gqcnn_jeffbranch_adapted/cfg/examples/{policy,suction_policy}_both.yaml
         color_im = self.colorlabel.nparray
         depth_im = self.depthlabel.nparray
         print(depth_im.shape)
-        import ruamel.yaml
-        yaml = ruamel.yaml.YAML()
-        with open(config_grasp) as fp:
-            data = yaml.load(fp)
-            print(data)
-        with open(config_suc) as fp:
-            data = yaml.load(fp)
-            print(data)
-        print(data['detection'])
-        data['detection']['image_width'] = depth_im.shape[1]
-        data['detection']['image_height'] = depth_im.shape[0]
-        #with open(config_suc, 'w') as fp:
-        #    yaml.dump(data, fp)
         self.set_graspviewpixmap(depth_im,self.depthlabel)
         preprocess_gq(color_im, depth_im)
         self.t_gr, self.q_gr, self.t_suc, self.q_suc = thread_dexnet('both')
@@ -529,14 +485,6 @@ class CameraView(QtWidgets.QMainWindow):
         preprocess_gq(color_im, depth_im)
         thread_dexnet('grasp')
 
-        #self.dexnetSignal.emit()
-#/home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/examples/policy.py
-        #python3_command = "python /home/jasy/FDexter/catkin_ws/src/gqcnn_jeffbranch/gqcnn/examples/policy.py"  # launch your python2 script using bash
-        #process= subprocess.call(python3_command.split())
-        # process = subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
-        #output, error = process.communicate()  # receive output from the python2 script
-        #print(output,error)
-
     def resizeEvent(self, event):
              print("resize")
              if hasattr(self,'counter'):
@@ -549,13 +497,13 @@ class CameraView(QtWidgets.QMainWindow):
              if hasattr(self.depthlabel,'initsize'):
                  aspectratio = self.depthlabel.w/self.depthlabel.h
                  if self.showcolorframe == True:
-                     self.layout.setRowMinimumHeight(0,self.buttons.width()/2/aspectratio)
+                     self.layout.setRowMinimumHeight(0,int(self.buttons.width()/2/aspectratio))
                      if self.showgraspsample == True:
-                        self.layout.setRowMinimumHeight(2,self.buttons.width()/2/aspectratio)
+                        self.layout.setRowMinimumHeight(2,int(self.buttons.width()/2/aspectratio))
                  else:
-                     self.layout.setRowMinimumHeight(0,self.buttons.width()/aspectratio)
+                     self.layout.setRowMinimumHeight(0,int(self.buttons.width()/aspectratio))
                      if self.showgraspsample == True:
-                        self.layout.setRowMinimumHeight(2,self.buttons.width()/aspectratio)
+                        self.layout.setRowMinimumHeight(2,int(self.buttons.width()/aspectratio))
              QtWidgets.QMainWindow.resizeEvent(self, event)
 
     @QtCore.Slot()
@@ -575,7 +523,7 @@ class CameraView(QtWidgets.QMainWindow):
             label.w = frame.shape[1]
             label.h = frame.shape[0]
         if self.resized == False:
-            label.resize(label.w/2,label.h/2)
+            label.resize(label.w//2,label.h//2)
             self.resize(self.layout.sizeHint())
             # v Hacky workaround to trigger resizeevent at startup and trigger correct formatting...
             newsize=QtCore.QSize(self.size())
@@ -584,11 +532,10 @@ class CameraView(QtWidgets.QMainWindow):
             QtCore.QCoreApplication.postEvent(self, myResizeEvent)
         pixmap = pixmap.scaled(label.size(),QtCore.Qt.KeepAspectRatio)
         label.setPixmap(pixmap)
-        m_paintFlags = QtGui.QPainter.RenderHints(
-                                            QtGui.QPainter.TextAntialiasing)
+        m_paintFlags = QtGui.QPainter.RenderHint.TextAntialiasing
         if self.showgraspsample:
             gvpixmap = self.graspviewlabel.ori_pixmap
-            gvpixmap = gvpixmap.scaled(label.size(),QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation)
+            gvpixmap = gvpixmap.scaled(label.size(),QtCore.Qt.KeepAspectRatio,QtCore.Qt.SmoothTransformation)
             self.graspviewlabel.setPixmap(gvpixmap)
 
         if not self.statustext_drawn and self.showgraspsample==True:
@@ -604,7 +551,7 @@ class CameraView(QtWidgets.QMainWindow):
             else:
                 painter.drawText(10,20, "Calculating Best Grip")
             self.graspviewlabel.ori_pixmap = gvpixmap
-            gvpixmap = gvpixmap.scaled(label.size(),QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation)
+            gvpixmap = gvpixmap.scaled(label.size(),QtCore.Qt.KeepAspectRatio,QtCore.Qt.SmoothTransformation)
             self.graspviewlabel.setPixmap(gvpixmap)
             painter.end()
         if not self.grasp_drawn and hasattr(self,'pose_grasp') and self.showgraspsample == True:
@@ -616,14 +563,14 @@ class CameraView(QtWidgets.QMainWindow):
             painter.setPen(QtGui.QColor(20,20,200))
             painter.setBrush(QtGui.QColor(20,20,200))
             print(self.pose_grasp.x, self.pose_grasp.y)
-            painter.drawText(self.pose_grasp.x + 20, self.pose_grasp.y, "parallel_grasp: " + str(self.pose_grasp.q))
-            painter.drawLine(self.pose_grasp.x2+self.pose_grasp.vector[0]*0.08 ,self.pose_grasp.y2+self.pose_grasp.vector[1]*0.08, self.pose_grasp.x-self.pose_grasp.vector[0]*0.08, self.pose_grasp.y - self.pose_grasp.vector[1]*0.08)
-            painter.drawEllipse(self.pose_grasp.x2+self.pose_grasp.vector[0]*0.08-5,self.pose_grasp.y2+self.pose_grasp.vector[1]*0.08-5,10,10)
-            painter.drawEllipse(self.pose_grasp.x-self.pose_grasp.vector[0]*0.08-5,self.pose_grasp.y - self.pose_grasp.vector[1]*0.08-5,10,10)
+            painter.drawText(QtCore.QPointF(self.pose_grasp.x + 20, self.pose_grasp.y), "parallel_grasp: " + str(self.pose_grasp.q))
+            painter.drawLine(QtCore.QLineF(self.pose_grasp.x2+self.pose_grasp.vector[0]*0.08 ,self.pose_grasp.y2+self.pose_grasp.vector[1]*0.08, self.pose_grasp.x-self.pose_grasp.vector[0]*0.08, self.pose_grasp.y - self.pose_grasp.vector[1]*0.08))
+            painter.drawEllipse(QtCore.QRectF(self.pose_grasp.x2+self.pose_grasp.vector[0]*0.08-5,self.pose_grasp.y2+self.pose_grasp.vector[1]*0.08-5,10,10))
+            painter.drawEllipse(QtCore.QRectF(self.pose_grasp.x-self.pose_grasp.vector[0]*0.08-5,self.pose_grasp.y - self.pose_grasp.vector[1]*0.08-5,10,10))
            # gvpixmap = QtGui.QPixmap.fromImage(gvpixmap)
            # gvpixmap = gvpixmap.scaled(self.graspviewlabel.size(),QtCore.Qt.KeepAspectRatio)
             self.graspviewlabel.ori_pixmap = gvpixmap
-            gvpixmap = gvpixmap.scaled(label.size(),QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation)
+            gvpixmap = gvpixmap.scaled(label.size(),QtCore.Qt.KeepAspectRatio,QtCore.Qt.SmoothTransformation)
             self.graspviewlabel.setPixmap(gvpixmap)
             #self.graspviewlabel.setPixmap(QtGui.QPixmap.fromImage((gvpixmap))
             painter.end()
@@ -635,8 +582,8 @@ class CameraView(QtWidgets.QMainWindow):
             painter.setRenderHints(m_paintFlags)
             painter.setPen(QtGui.QColor(100,20,200))
             painter.setBrush(QtGui.QColor(100,20,200))
-            painter.drawEllipse(self.pose_suc.x-5, self.pose_suc.y-5, 10, 10)
-            painter.drawText(self.pose_suc.x + 20, self.pose_suc.y, "suction_grasp: "+str(self.pose_suc.q))
+            painter.drawEllipse(QtCore.QRectF(self.pose_suc.x-5, self.pose_suc.y-5, 10, 10))
+            painter.drawText(QtCore.QPointF(self.pose_suc.x + 20, self.pose_suc.y), "suction_grasp: "+str(self.pose_suc.q))
             print(self.pose_suc.x, self.pose_suc.y)
 
             self.graspviewlabel.ori_pixmap = gvpixmap
@@ -690,4 +637,4 @@ if __name__ == "__main__":
     #to display the CameraView right away
     window = CameraView()
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

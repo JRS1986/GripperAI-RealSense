@@ -76,7 +76,7 @@ class CameraChessboardRegistration:
         color_image_rescale_factor = config['color_image_rescale_factor']
         flip_normal = config['flip_normal']
         y_points_left = False
-        if 'y_points_left' in config.keys() and sx == sy:
+        if 'y_points_left' in list(config.keys()) and sx == sy:
             y_points_left = config['y_points_left']
             num_images = 1
         vis = config['vis']

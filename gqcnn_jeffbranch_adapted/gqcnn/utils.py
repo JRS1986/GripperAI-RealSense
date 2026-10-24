@@ -41,5 +41,5 @@ def set_cuda_visible_devices(gpu_list):
     for gpu in gpu_list:
         cuda_visible_devices += str(gpu) + ","
 
-    print "setting CUDA_VISIBLE_DEVICES = ", cuda_visible_devices
+    print("setting CUDA_VISIBLE_DEVICES = ", cuda_visible_devices)
     os.environ["CUDA_VISIBLE_DEVICES"] = cuda_visible_devices

@@ -780,7 +780,7 @@ def load_images(cfg):
         A set of ColorImages and DepthImages, and the Kinect's CameraIntrinsics
         for its IR sensor.
     """
-    if 'prestored_data' in cfg.keys() and cfg['prestored_data'] == 1:
+    if 'prestored_data' in list(cfg.keys()) and cfg['prestored_data'] == 1:
         sensor = VirtualKinect2Sensor(path_to_images=cfg['prestored_data_dir'], frame=cfg['sensor']['frame'])
     else:
         sensor = Kinect2Sensor(device_num=cfg['sensor']['device_num'], frame=cfg['sensor']['frame'],

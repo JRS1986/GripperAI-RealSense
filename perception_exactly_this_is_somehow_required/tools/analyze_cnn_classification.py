@@ -32,7 +32,7 @@ def analyze_classification_performance(model_dir, config, dataset_path=None):
     style = '-'
 
     class_remapping = None
-    if 'class_remapping' in config.keys():
+    if 'class_remapping' in list(config.keys()):
         class_remapping = config['class_remapping']
 
     # read training config
@@ -120,7 +120,7 @@ def analyze_classification_performance(model_dir, config, dataset_path=None):
 
     # evaluate on dataset
     results = {}
-    for split_name, indices in splits.iteritems():
+    for split_name, indices in splits.items():
         logging.info('Evaluating performance on split: %s' %(split_name))
 
         # predict
@@ -155,7 +155,7 @@ def analyze_classification_performance(model_dir, config, dataset_path=None):
         # apply optional class re-mapping
         if class_remapping is not None:
             new_true_labels = np.zeros(true_labels.shape)
-            for orig_label, new_label in class_remapping.iteritems():
+            for orig_label, new_label in class_remapping.items():
                 new_true_labels[true_labels==orig_label] = new_label
             true_labels = new_true_labels
 

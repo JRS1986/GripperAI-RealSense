@@ -1,11 +1,12 @@
-# small install script for this GripperViewContainer. Will probably not work all the time
+#!/usr/bin/env bash
+# Creates .venv with Python 3.13 and installs GripperAI-RealSense into it.
+# Override the interpreter with e.g. PYTHON=~/.pyenv/versions/3.13.12/bin/python ./install.sh
+set -euo pipefail
+cd "$(dirname "$0")"
 
-# needed: python(2) and python3, with pip and pip3
-pip install -r requirements.txt
-pip3 install -r requirements.txt
-pip install perception_exactly_this_is_somehow_required/
-#irgendwie installiert der bei mir numpy immer doppelt...
-pip uninstall numpy 
-cd gqcnn_jeffbranch_adapted && python setup.py install && cd ..
-
-#viel erfolg
+PYTHON="${PYTHON:-python3.13}"
+"$PYTHON" -m venv .venv
+.venv/bin/pip install --upgrade pip
+.venv/bin/pip install -r requirements.txt
+# vendored, patched Dex-Net packages (dependencies are pinned in requirements.txt)
+.venv/bin/pip install --no-deps -e perception_exactly_this_is_somehow_required -e gqcnn_jeffbranch_adapted

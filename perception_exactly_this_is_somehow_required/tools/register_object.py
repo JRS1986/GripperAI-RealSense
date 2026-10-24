@@ -15,7 +15,7 @@ try:
     from meshpy import ObjFile
     from visualization import Visualizer3D as vis
 except:
-    print 'Failed to import AUTOLAB meshpy and / or visualization package. Visualizatoin disabled'
+    print('Failed to import AUTOLAB meshpy and / or visualization package. Visualizatoin disabled')
     VIS_SUPPORTED = FALSE
 
 if __name__ == '__main__':
@@ -62,7 +62,7 @@ if __name__ == '__main__':
         os.makedirs(output_path)
         
     output_filename = os.path.join(output_path, '{0}_to_world.tf'.format(T_world_obj.from_frame))
-    print T_world_obj
+    print(T_world_obj)
     T_world_obj.save(output_filename)
 
     if config['vis'] and VIS_SUPPORTED:

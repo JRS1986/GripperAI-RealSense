@@ -23,7 +23,8 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 Class for storing constants/enums for the DeepOptimizer
 Author: Vishal Satish
 """
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 # other constants
 class GeneralConstants:

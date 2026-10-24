@@ -33,7 +33,8 @@ import os
 import time
 import os
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 from autolab_core import Point, YamlConfig
 import autolab_core.utils as utils
@@ -88,14 +89,14 @@ if __name__ == '__main__':
             theta = float(k) * 180.0 / num_rots
             logging.info('Evaluating network at rotation %.3f' %(theta))
 
-            for layer in gqcnn.feature_tensors.keys():
+            for layer in list(gqcnn.feature_tensors.keys()):
                 if layer.find('conv') == -1:
                     continue
                     
                 logging.info('Rotating filters for %s' %(layer))
 
                 convW_var = gqcnn.weights.__dict__['%sW' %(layer)]
-                if layer not in orig_convW.keys():
+                if layer not in list(orig_convW.keys()):
                     orig_convW[layer] = sess.run(convW_var)
                 convW = orig_convW[layer]     
                 height = convW.shape[0]
@@ -139,7 +140,7 @@ if __name__ == '__main__':
         # plot        
         vis2d.figure()
         k = 1
-        thetas = predictions.keys()
+        thetas = list(predictions.keys())
         thetas.sort()
         for theta in thetas:
             p_success = predictions[theta]

@@ -114,7 +114,6 @@ inpaint_rescale_factor : float
 """
 import argparse
 import logging
-import IPython
 import numpy as np
 import os
 import random
@@ -214,7 +213,9 @@ def main():
         vis.grasp(action.grasp, scale=1.5, show_center=False, show_axis=True)
         vis.title('Planned suction grasp on depth (Q=%.3f)' %(action.q_value))
         vis.show()
-    print(round(action.q_value,3), action.grasp.center.x, action.grasp.center.y, action.grasp.depth[0])
+    # single line "q x y depth", parsed by dexgripQtUi/main_uic.py
+    result = (round(action.q_value,3), action.grasp.center.x, action.grasp.center.y, action.grasp.depth[0])
+    print(' '.join(str(float(v)) for v in result))
 
 if __name__ == '__main__':
     main()

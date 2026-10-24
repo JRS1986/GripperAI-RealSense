@@ -37,7 +37,7 @@ import sys
 from time import sleep, time
 
 import scipy.spatial.distance as ssd
-import scipy.ndimage.filters as snf
+import scipy.ndimage as snf
 import scipy.stats as ss
 import sklearn.mixture
 
@@ -69,7 +69,7 @@ class DepthSamplingMode(object):
     MIN = 'min'
     MAX = 'max'
 
-class ImageGraspSampler(object):
+class ImageGraspSampler(object, metaclass=ABCMeta):
     """
     Wraps image to crane grasp candidate generation for easy deployment of GQ-CNN.
 
@@ -78,7 +78,6 @@ class ImageGraspSampler(object):
     config : :obj:`autolab_core.YamlConfig`
         a dictionary-like object containing the parameters of the sampler
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, config):
         # set params
@@ -205,8 +204,14 @@ class AntipodalDepthImageGraspSampler(ImageGraspSampler):
         self._max_rejection_samples = self._config['max_rejection_samples']
 
         self._min_num_edge_pixels = 0
-        if 'min_num_edge_pixels' in self._config.keys():
+        if 'min_num_edge_pixels' in list(self._config.keys()):
             self._min_num_edge_pixels = self._config['min_num_edge_pixels']
+
+        # pairwise antipodality checks need O(n^2) memory, so noisy depth
+        # images with many edge pixels are randomly subsampled to this size
+        self._max_num_edge_pixels = 5000
+        if 'max_num_edge_pixels' in list(self._config.keys()):
+            self._max_num_edge_pixels = self._config['max_num_edge_pixels']
         
         # distance thresholds for rejection sampling
         self._max_dist_from_center = self._config['max_dist_from_center']
@@ -335,6 +340,11 @@ class AntipodalDepthImageGraspSampler(ImageGraspSampler):
                 edge_pixels = np.array([p for p in edge_pixels if np.any(segmask[p[0], p[1]] > 0)])
                 depth_im_mask = depth_im.mask_binary(segmask)
 
+        if edge_pixels.shape[0] > self._max_num_edge_pixels:
+            logging.warning('Subsampling %d edge pixels to %d' %(edge_pixels.shape[0], self._max_num_edge_pixels))
+            keep = np.random.choice(edge_pixels.shape[0], self._max_num_edge_pixels, replace=False)
+            edge_pixels = edge_pixels[np.sort(keep)]
+
         num_pixels = edge_pixels.shape[0]
         logging.debug('Depth edge detection took %.3f sec' %(time() - edge_start))
         logging.debug('Found %d edge pixels' %(num_pixels))
@@ -434,7 +444,7 @@ class AntipodalDepthImageGraspSampler(ImageGraspSampler):
             k += 1
 
             # check center and axis
-            grasp_center = (p1 + p2) / 2
+            grasp_center = (p1 + p2) // 2
             grasp_axis = p2 - p1
             grasp_axis = grasp_axis / np.linalg.norm(grasp_axis)
             grasp_theta = np.pi / 2
@@ -527,7 +537,7 @@ class DepthImageSuctionPointSampler(ImageGraspSampler):
                                   scale=self._max_phi-self._min_phi)
 
         self._mean_depth = 0.0
-        if 'mean_depth' in self._config.keys():
+        if 'mean_depth' in list(self._config.keys()):
             self._mean_depth = self._config['mean_depth']
         self._sigma_depth = self._config['sigma_depth']
         self._depth_rv = ss.norm(self._mean_depth, self._sigma_depth**2)

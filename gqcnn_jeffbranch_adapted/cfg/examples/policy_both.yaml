@@ -47,7 +47,7 @@ policy:
   # metrics
   metric:
     type: gqcnn
-    gqcnn_model: /home/jasy/GripperViewContainer/trained_models/GQ2017Paper-Grasp
+    gqcnn_model: ../trained_models/GQ2017Paper-Grasp
     
     crop_height: 196
     crop_width: 196

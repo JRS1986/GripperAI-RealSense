@@ -53,7 +53,7 @@ if __name__ == '__main__':
     logging.getLogger().addHandler(rl.RosStreamHandler())
 
     # get camera sensor object
-    for sensor_frame, sensor_data in config['sensors'].iteritems():
+    for sensor_frame, sensor_data in config['sensors'].items():
         logging.info('Registering %s' %(sensor_frame))
         sensor_config = sensor_data['sensor_config']
         registration_config = sensor_data['registration_config'].copy()
@@ -120,7 +120,6 @@ if __name__ == '__main__':
             y = YuMiRobot(tcp=YMC.TCP_SUCTION_STIFF)
             y.set_z('fine')
             y.reset_home()
-            global clicked_pt
             
             # iteratively go to poses
             robot_points_camera = []
@@ -195,7 +194,7 @@ if __name__ == '__main__':
                 inliers = np.where(dists < dist_thresh)[0]
                 num_inliers = inliers.shape[0]
 
-                print k, num_inliers, np.mean(dists)
+                print(k, num_inliers, np.mean(dists))
 
                 if num_inliers >= min_inliers:
                     ind = inliers
@@ -261,7 +260,7 @@ if __name__ == '__main__':
         if config['use_robot']:  
             # get robot type
             robot_type = 'yumi'
-            if 'robot_type' in config.keys():
+            if 'robot_type' in list(config.keys()):
                 robot_type = config['robot_type']
             
             # find the rightmost and further cb point in world frame
@@ -333,7 +332,7 @@ if __name__ == '__main__':
             robot.goto_pose(T_gripper_world)
             
             # wait for human measurement
-            yesno = raw_input('Take measurement. Hit [ENTER] when done')
+            yesno = input('Take measurement. Hit [ENTER] when done')
             robot.goto_pose(T_gripper_world_lift)
 
             # choose target point 2
@@ -356,7 +355,7 @@ if __name__ == '__main__':
             robot.goto_pose(T_gripper_world)
             
             # wait for human measurement
-            yesno = raw_input('Take measurement. Hit [ENTER] when done')
+            yesno = input('Take measurement. Hit [ENTER] when done')
             robot.goto_pose(T_gripper_world_lift)
             robot.goto_pose(T_orig_gripper_world_lift)
 
@@ -383,13 +382,13 @@ if __name__ == '__main__':
             robot.goto_pose(T_gripper_world)
             
             # wait for human measurement
-            yesno = raw_input('Take measurement. Hit [ENTER] when done')
+            yesno = input('Take measurement. Hit [ENTER] when done')
             robot.goto_pose(T_gripper_world_lift)
             robot.goto_pose(T_orig_gripper_world_lift)
             
             # stop robot
             robot.reset_home()
-            if robot_type != 'ur5' and 'reset_bin' in config.keys() and config['reset_bin']:
+            if robot_type != 'ur5' and 'reset_bin' in list(config.keys()) and config['reset_bin']:
                 y.reset_bin()
             if robot_type == 'ur5':
                 robot.stop()

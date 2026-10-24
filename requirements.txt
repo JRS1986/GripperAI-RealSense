@@ -1,19 +1,19 @@
-numpy==1.13.3
-pyrealsense2==2.18.1.549
-PySide2==5.12.1
-pypng==0.0.19
-subprocess32==3.5.3
-ruamel.yaml==0.15.89
-argparse==1.1
-autolab-core==0.0.1
-scipy==1.0.0
-matplotlib==2.1.0
-tensorflow==1.3.0
-tensorflow-tensorboard==0.1.8
-scikit-image==0.13.1
-scikit-learn==0.19.0
-Pillow==4.3.0
-urllib3==1.22
-opencv-python==3.3.0.9
-IPython==5.5.0
-autolab-perception==0.0.4
+# Tested set for Python 3.13 (TensorFlow 2.21 has no Python 3.14 wheels yet).
+# The two vendored packages are installed on top of this by install.sh.
+tensorflow==2.21.0
+numpy==2.5.4
+scipy==1.18.1
+scikit-image==0.26.0
+scikit-learn==1.9.1
+matplotlib==3.11.2
+pillow==13.0.0
+opencv-python==5.0.0.93
+PySide6==6.12.0
+pypng==0.20220715.0
+pyyaml==6.0.3
+autolab-core==1.1.1
+# autolab-core 1.1.1 still uses ruamel.yaml's removed load() API
+ruamel.yaml==0.17.40
+# Intel only publishes macOS wheels under a separate package name
+pyrealsense2==2.59.1.11053; sys_platform != "darwin"
+pyrealsense2-macosx==2.56.5; sys_platform == "darwin"

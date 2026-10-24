@@ -28,10 +28,9 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
-import IPython
 from time import time
 
-import scipy.ndimage.filters as snf
+import scipy.ndimage as snf
 
 import autolab_core.utils as utils
 from autolab_core import Point, PointCloud, RigidTransform
@@ -43,9 +42,8 @@ from gqcnn import Visualizer as vis
 # constant for display
 FIGSIZE = 16
 
-class GraspQualityFunction(object):
+class GraspQualityFunction(object, metaclass=ABCMeta):
     """Abstract grasp quality class. """
-    __metaclass__ = ABCMeta
 
     def __call__(self, state, actions, params=None):
         """ Evaluates grasp quality for a set of actions given a state. """
@@ -187,8 +185,8 @@ class SuctionQualityFunction(GraspQualityFunction):
         """Retrieve all points on the object in a box of size self._window_size. """
         # read indices
         im_shape = point_cloud_image.shape
-        i_start = int(max(action.center.y-self._window_size/2, 0))
-        j_start = int(max(action.center.x-self._window_size/2, 0))
+        i_start = int(max(action.center.y-self._window_size//2, 0))
+        j_start = int(max(action.center.x-self._window_size//2, 0))
         i_end = int(min(i_start+self._window_size, im_shape[0]))
         j_end = int(min(j_start+self._window_size, im_shape[1]))
         step = int(1 / self._sample_rate)
@@ -261,7 +259,7 @@ class BestFitPlanaritySuctionQualityFunction(SuctionQualityFunction):
 
             if params is not None and params['vis']['plane']:
                 from visualization import Visualizer3D as vis
-                mid_i = A.shape[0] / 2
+                mid_i = A.shape[0] // 2
                 pred_z = A.dot(w)
                 p0 = np.array([A[mid_i,0], A[mid_i,1], pred_z[mid_i]])
                 n = np.array([w[0], w[1], -1])
@@ -341,7 +339,7 @@ class ApproachPlanaritySuctionQualityFunction(SuctionQualityFunction):
 
             if params is not None and params['vis']['plane']:
                 from visualization import Visualizer3D as vis
-                mid_i = A.shape[0] / 2
+                mid_i = A.shape[0] // 2
                 pred_z = A.dot(w)
                 p0 = np.array([A[mid_i,0], A[mid_i,1], pred_z[mid_i]])
                 n = np.array([w[0], w[1], -1])
@@ -404,8 +402,8 @@ class DiscApproachPlanaritySuctionQualityFunction(SuctionQualityFunction):
 
         # read indices
         im_shape = point_cloud_image.shape
-        i_start = int(max(action.center.y-self._window_size/2, 0))
-        j_start = int(max(action.center.x-self._window_size/2, 0))
+        i_start = int(max(action.center.y-self._window_size//2, 0))
+        j_start = int(max(action.center.x-self._window_size//2, 0))
         i_end = int(min(i_start+self._window_size, im_shape[0]))
         j_end = int(min(j_start+self._window_size, im_shape[1]))
         step = int(1 / self._sample_rate)
@@ -464,7 +462,7 @@ class DiscApproachPlanaritySuctionQualityFunction(SuctionQualityFunction):
 
             if params is not None and params['vis']['plane']:
                 from visualization import Visualizer3D as vis
-                mid_i = A.shape[0] / 2
+                mid_i = A.shape[0] // 2
                 pred_z = A.dot(w)
                 p0 = np.array([A[mid_i,0], A[mid_i,1], pred_z[mid_i]])
                 n = np.array([w[0], w[1], -1])
@@ -560,7 +558,7 @@ class ComDiscApproachPlanaritySuctionQualityFunction(DiscApproachPlanaritySuctio
         """Create approach planarity suction metric. """
         self._planarity_pctile = config['planarity_pctile']
         self._planarity_abs_thresh = 0
-        if 'planarity_abs_thresh' in config.keys():
+        if 'planarity_abs_thresh' in list(config.keys()):
             self._planarity_abs_thresh = np.exp(-config['planarity_abs_thresh'])
 
         DiscApproachPlanaritySuctionQualityFunction.__init__(self, config)
@@ -618,7 +616,7 @@ class ComDiscApproachPlanaritySuctionQualityFunction(DiscApproachPlanaritySuctio
         """Create approach planarity suction metric. """
         self._planarity_pctile = config['planarity_pctile']
         self._planarity_abs_thresh = 0
-        if 'planarity_abs_thresh' in config.keys():
+        if 'planarity_abs_thresh' in list(config.keys()):
             self._planarity_abs_thresh = np.exp(-config['planarity_abs_thresh'])
 
         DiscApproachPlanaritySuctionQualityFunction.__init__(self, config)
@@ -753,8 +751,8 @@ class DiscCurvatureSuctionQualityFunction(GaussianCurvatureSuctionQualityFunctio
         """Retrieve all points on the object in a disc of size self._window_size. """
         # read indices
         im_shape = point_cloud_image.shape
-        i_start = int(max(action.center.y-self._window_size/2, 0))
-        j_start = int(max(action.center.x-self._window_size/2, 0))
+        i_start = int(max(action.center.y-self._window_size//2, 0))
+        j_start = int(max(action.center.x-self._window_size//2, 0))
         i_end = int(min(i_start+self._window_size, im_shape[0]))
         j_end = int(min(j_start+self._window_size, im_shape[1]))
         step = int(1 / self._sample_rate)
@@ -901,13 +899,13 @@ class GQCnnQualityFunction(GraspQualityFunction):
             if input_data_mode == InputDataMode.PARALLEL_JAW:
                 pose_tensor[i] = grasp.depth
             elif input_data_mode == InputDataMode.SUCTION:
-                pose_tensor[i,...] = np.array([grasp.depth, grasp.approach_angle])
+                pose_tensor[i,...] = np.r_[grasp.depth, grasp.approach_angle]
             elif input_data_mode == InputDataMode.TF_IMAGE:
                 pose_tensor[i] = grasp.depth
             elif input_data_mode == InputDataMode.TF_IMAGE_PERSPECTIVE:
-                pose_tensor[i,...] = np.array([grasp.depth, grasp.center.x, grasp.center.y])
+                pose_tensor[i,...] = np.r_[grasp.depth, grasp.center.x, grasp.center.y]
             elif input_data_mode == InputDataMode.TF_IMAGE_SUCTION:
-                pose_tensor[i,...] = np.array([grasp.depth, grasp.approach_angle])
+                pose_tensor[i,...] = np.r_[grasp.depth, grasp.approach_angle]
             else:
                 raise ValueError('Input data mode %s not supported' %(input_data_mode))
         logging.debug('Tensor conversion took %.3f sec' %(time()-tensor_start))
@@ -1040,9 +1038,9 @@ class NoMagicQualityFunction(GraspQualityFunction):
             if input_data_mode == InputDataMode.TF_IMAGE:
                 pose_tensor[i] = grasp.depth
             elif input_data_mode == InputDataMode.TF_IMAGE_PERSPECTIVE:
-                pose_tensor[i,...] = np.array([grasp.depth, grasp.center.x, grasp.center.y])
+                pose_tensor[i,...] = np.r_[grasp.depth, grasp.center.x, grasp.center.y]
             elif input_data_mode == InputDataMode.TF_IMAGE_SUCTION:
-                pose_tensor[i,...] = np.array([grasp.depth, grasp.approach_angle])
+                pose_tensor[i,...] = np.r_[grasp.depth, grasp.approach_angle]
             else:
                 raise ValueError('Input data mode %s not supported' %(input_data_mode))
         logging.debug('Tensor conversion took %.3f sec' %(time()-tensor_start))

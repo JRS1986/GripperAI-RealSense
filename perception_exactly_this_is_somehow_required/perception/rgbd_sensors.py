@@ -27,7 +27,7 @@ class RgbdSensorFactory:
             s = KinectSensorBridged(quality=cfg['quality'], frame=cfg['frame'])
         elif sensor_type == 'primesense':
             flip_images = True
-            if 'flip_images' in cfg.keys():
+            if 'flip_images' in list(cfg.keys()):
                 flip_images = cfg['flip_images']
             s = PrimesenseSensor(auto_white_balance=cfg['auto_white_balance'],
                                  flip_images=flip_images,

@@ -495,7 +495,7 @@ class ClassificationResult(object):
 
 
 		table = plt.table(cellText=data, rowLabels=table_key_list, colLabels=names)
-		print type(table)
+		print(type(table))
 
 		fig = plt.gcf()
 		fig.subplots_adjust(bottom=0.15)

@@ -12,9 +12,7 @@ from .constants import *
 from .cnn import AlexNet
 from .image import Image, ColorImage, DepthImage
 
-class FeatureExtractor:
-    __metaclass__ = ABCMeta
-
+class FeatureExtractor(metaclass=ABCMeta):
     def __init__(self):
         pass
 

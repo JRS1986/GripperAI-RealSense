@@ -13,9 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """A simple script for inspect checkpoint files."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import argparse
 import sys
@@ -54,7 +54,7 @@ def print_tensors_in_checkpoint_file(file_name, tensor_name, all_tensors,
           print(reader.get_tensor(key))
     elif not tensor_name:
       num_params = 0
-      for variable_name, shape in reader.get_variable_to_shape_map().iteritems():
+      for variable_name, shape in reader.get_variable_to_shape_map().items():
         
         num_params += np.product(list(shape))
       print('TOTAL PARAMS: {}'.format(num_params))

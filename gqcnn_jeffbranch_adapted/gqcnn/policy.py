@@ -25,7 +25,7 @@ Author: Jeff Mahler
 """
 from abc import ABCMeta, abstractmethod
 
-import cPickle as pkl
+import pickle as pkl
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
@@ -167,9 +167,8 @@ class GraspAction(object):
         pkl.dump(self.q_value, open(q_value_filename, 'wb'))
         self.image.save(image_filename)
         
-class Policy(object):
+class Policy(object, metaclass=ABCMeta):
     """ Abstract policy class. """
-    __metaclass__ = ABCMeta
 
     def __call__(self, state):
         return self.action(state)
@@ -202,7 +201,7 @@ class GraspingPolicy(Policy):
         # store parameters
         self._config = config
         self._gripper_width = np.inf
-        if 'gripper_width' in config.keys():
+        if 'gripper_width' in list(config.keys()):
             self._gripper_width = config['gripper_width']
 
         # init grasp sampler
@@ -317,13 +316,13 @@ class RobustGraspingPolicy(GraspingPolicy):
         """ Parses the parameters of the policy. """
         self._num_grasp_samples = self.config['sampling']['num_grasp_samples']
         self._max_grasps_filter = 1
-        if 'max_grasps_filter' in self.config.keys():
+        if 'max_grasps_filter' in list(self.config.keys()):
             self._max_grasps_filter = self.config['max_grasps_filter']
         self._gripper_width = np.inf
-        if 'gripper_width' in self.config.keys():
+        if 'gripper_width' in list(self.config.keys()):
             self._gripper_width = self.config['gripper_width']
         self._logging_dir = None
-        if 'logging_dir' in self.config.keys():
+        if 'logging_dir' in list(self.config.keys()):
             self._logging_dir = self.config['logging_dir']
 
     def select(self, grasps, q_value):
@@ -332,7 +331,7 @@ class RobustGraspingPolicy(GraspingPolicy):
         """
         # sort grasps
         num_grasps = len(grasps)
-        grasps_and_predictions = zip(np.arange(num_grasps), q_value)
+        grasps_and_predictions = list(zip(np.arange(num_grasps), q_value))
         grasps_and_predictions.sort(key = lambda x : x[1], reverse=True)
 
         # return top grasps
@@ -346,7 +345,7 @@ class RobustGraspingPolicy(GraspingPolicy):
             index = grasps_and_predictions[i][0]
             grasp = grasps[index]
             valid = True
-            for filter_name, is_valid in self._filters.iteritems():
+            for filter_name, is_valid in self._filters.items():
                 valid = is_valid(grasp) 
                 logging.debug('Grasp {} filter {} valid: {}'.format(i, filter_name, valid))
                 if not valid:
@@ -504,15 +503,15 @@ class CrossEntropyRobustGraspingPolicy(GraspingPolicy):
         self._gmm_reg_covar = self.config['gmm_reg_covar']
 
         self._max_grasps_filter = 1
-        if 'max_grasps_filter' in self.config.keys():
+        if 'max_grasps_filter' in list(self.config.keys()):
             self._max_grasps_filter = self.config['max_grasps_filter']
 
         self._max_resamples_per_iteration = 100
-        if 'max_resamples_per_iteration' in self.config.keys():
+        if 'max_resamples_per_iteration' in list(self.config.keys()):
             self._max_resamples_per_iteration = self.config['max_resamples_per_iteration']
 
         self._max_approach_angle = np.inf
-        if 'max_approach_angle' in self.config.keys():
+        if 'max_approach_angle' in list(self.config.keys()):
             self._max_approach_angle = np.deg2rad(self.config['max_approach_angle'])
             
         # gripper parameters
@@ -520,12 +519,12 @@ class CrossEntropyRobustGraspingPolicy(GraspingPolicy):
         if self.config['deterministic']:
             self._seed = SEED
         self._gripper_width = np.inf
-        if 'gripper_width' in self.config.keys():
+        if 'gripper_width' in list(self.config.keys()):
             self._gripper_width = self.config['gripper_width']
 
         # optional, logging dir
         self._logging_dir = None
-        if 'logging_dir' in self.config.keys():
+        if 'logging_dir' in list(self.config.keys()):
             self._logging_dir = self.config['logging_dir']
             if not os.path.exists(self._logging_dir):
                 os.mkdir(self._logging_dir)
@@ -539,7 +538,7 @@ class CrossEntropyRobustGraspingPolicy(GraspingPolicy):
         num_grasps = len(grasps)
         if num_grasps == 0:
             raise NoValidGraspsException('Zero grasps')
-        grasps_and_predictions = zip(np.arange(num_grasps), q_values)
+        grasps_and_predictions = list(zip(np.arange(num_grasps), q_values))
         grasps_and_predictions.sort(key = lambda x : x[1], reverse=True)
 
         # return top grasps
@@ -553,7 +552,7 @@ class CrossEntropyRobustGraspingPolicy(GraspingPolicy):
             index = grasps_and_predictions[i][0]
             grasp = grasps[index]
             valid = True
-            for filter_name, is_valid in self._filters.iteritems():
+            for filter_name, is_valid in self._filters.items():
                 valid = is_valid(grasp) 
                 logging.info('Grasp {} filter {} valid: {}'.format(i, filter_name, valid))
                 if not valid:
@@ -630,7 +629,7 @@ class CrossEntropyRobustGraspingPolicy(GraspingPolicy):
 
             # sort grasps
             resample_start = time()
-            q_values_and_indices = zip(q_values, np.arange(num_grasps))
+            q_values_and_indices = list(zip(q_values, np.arange(num_grasps)))
             q_values_and_indices.sort(key = lambda x : x[0], reverse=True)
 
             if self.config['vis']['grasp_candidates']:

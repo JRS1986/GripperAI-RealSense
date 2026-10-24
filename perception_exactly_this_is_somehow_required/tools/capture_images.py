@@ -44,12 +44,12 @@ if __name__ == '__main__':
 
     # read workspace bounds
     workspace = None
-    if 'workspace' in config.keys():
+    if 'workspace' in list(config.keys()):
         workspace = Box(np.array(config['workspace']['min_pt']),
                         np.array(config['workspace']['max_pt']),
                         frame='world')
         
-    for sensor_name, sensor_config in config['sensors'].iteritems():
+    for sensor_name, sensor_config in config['sensors'].items():
         print('Capturing images from sensor %s' %(sensor_name))
         save_dir = os.path.join(output_dir, sensor_name)
         if not os.path.exists(save_dir):

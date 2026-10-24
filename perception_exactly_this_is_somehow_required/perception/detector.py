@@ -5,11 +5,10 @@ Author: Jeff Mahler
 from abc import ABCMeta, abstractmethod
 import colorsys
 import cv2
-import IPython
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.ndimage.morphology as snm
+import scipy.ndimage as snm
 
 from autolab_core import Box
 
@@ -109,10 +108,9 @@ class RgbdDetection(object):
         else:
             raise ValueError('Render mode %s not supported' %(render_mode))
 
-class RgbdDetector(object):
+class RgbdDetector(object, metaclass=ABCMeta):
     """ Wraps methods for as many distinct objects in the image as possible.
     """
-    __metaclass__ = ABCMeta    
 
     @abstractmethod
     def detect(self, color_im, depth_im, cfg, camera_intr=None,
@@ -182,8 +180,8 @@ class RgbdForegroundMaskDetector(RgbdDetector):
         binary_im = color_im.foreground_mask(foreground_mask_tolerance, bgmodel=bgmodel)
 
         # filter the image
-        y, x = np.ogrid[-w/2+1:w/2+1, -w/2+1:w/2+1]
-        mask = x*x + y*y <= w/2*w/2
+        y, x = np.ogrid[-w//2+1:w//2+1, -w//2+1:w//2+1]
+        mask = x*x + y*y <= w//2*w//2
         filter_struct = np.zeros([w,w]).astype(np.uint8)
         filter_struct[mask] = 1
         binary_im_filtered = binary_im.apply(snm.grey_closing, structure=filter_struct)
@@ -268,7 +266,7 @@ class RgbdForegroundMaskQueryImageDetector(RgbdDetector):
             bg_dists.append(bg_dist)
 
         # sort by distance
-        dists_and_indices = zip(np.arange(len(bg_dists)), bg_dists)
+        dists_and_indices = list(zip(np.arange(len(bg_dists)), bg_dists))
         dists_and_indices.sort(key = lambda x: x[1], reverse=True)
         
         # mask out the segment in the binary image
@@ -343,7 +341,7 @@ class RgbdForegroundMaskQueryImageDetector(RgbdDetector):
         fill_depth = np.max(depth_im.data[depth_im.data > 0])
 
         kinect2_denoising = False
-        if 'kinect2_denoising' in cfg.keys() and cfg['kinect2_denoising']:
+        if 'kinect2_denoising' in list(cfg.keys()) and cfg['kinect2_denoising']:
             kinect2_denoising = True
             depth_offset = cfg['kinect2_noise_offset']
             max_depth = cfg['kinect2_noise_max_depth']
@@ -353,8 +351,8 @@ class RgbdForegroundMaskQueryImageDetector(RgbdDetector):
         binary_im = color_im.foreground_mask(foreground_mask_tolerance, bgmodel=bgmodel)
 
         # filter the image
-        y, x = np.ogrid[-w/2+1:w/2+1, -w/2+1:w/2+1]
-        mask = x*x + y*y <= w/2*w/2
+        y, x = np.ogrid[-w//2+1:w//2+1, -w//2+1:w//2+1]
+        mask = x*x + y*y <= w//2*w//2
         filter_struct = np.zeros([w,w]).astype(np.uint8)
         filter_struct[mask] = 1
         binary_im_filtered = binary_im.apply(snm.grey_closing, structure=filter_struct)
@@ -479,7 +477,7 @@ class PointCloudBoxDetector(RgbdDetector):
         fill_depth = np.max(depth_im.data[depth_im.data > 0])
 
         kinect2_denoising = False
-        if 'kinect2_denoising' in cfg.keys() and cfg['kinect2_denoising']:
+        if 'kinect2_denoising' in list(cfg.keys()) and cfg['kinect2_denoising']:
             kinect2_denoising = True
             depth_offset = cfg['kinect2_noise_offset']
             max_depth = cfg['kinect2_noise_max_depth']
@@ -500,8 +498,8 @@ class PointCloudBoxDetector(RgbdDetector):
             binary_im = binary_im.mask_binary(segmask.inverse())
 
         # filter the image
-        y, x = np.ogrid[-w/2+1:w/2+1, -w/2+1:w/2+1]
-        mask = x*x + y*y <= w/2*w/2
+        y, x = np.ogrid[-w//2+1:w//2+1, -w//2+1:w//2+1]
+        mask = x*x + y*y <= w//2*w//2
         filter_struct = np.zeros([w,w]).astype(np.uint8)
         filter_struct[mask] = 1
         binary_im_filtered_data = snm.binary_dilation(binary_im.data, structure=filter_struct)

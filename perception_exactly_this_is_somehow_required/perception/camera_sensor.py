@@ -10,11 +10,9 @@ from .image import ColorImage, DepthImage, IrImage
 
 import os
 
-class CameraSensor(object):
+class CameraSensor(object, metaclass=ABCMeta):
     """Abstract base class for camera sensors.
     """
-
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def start(self):
@@ -264,7 +262,7 @@ class TensorDatasetVirtualSensor(VirtualSensor):
         self._dataset = TensorDataset.open(self._dataset_path)
         self._num_images = self._dataset.num_datapoints
         self._image_rescale_factor = 1.0
-        if 'image_rescale_factor' in self._dataset.metadata.keys():
+        if 'image_rescale_factor' in list(self._dataset.metadata.keys()):
             self._image_rescale_factor = 1.0 / self._dataset.metadata['image_rescale_factor']
         
         datapoint = self._dataset.datapoint(0, [TensorDatasetVirtualSensor.CAMERA_INTR_FIELD])

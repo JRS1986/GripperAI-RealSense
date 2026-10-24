@@ -37,7 +37,6 @@ from perception import BinaryImage, ColorImage, DepthImage, GdImage, GrayscaleIm
 from gqcnn import Grasp2D, SuctionPoint2D, GQCNN, ClassificationResult, InputDataMode, ImageMode, ImageFileTemplates
 from gqcnn import Visualizer as vis2d
 
-import IPython
 
 class GQCNNPredictionVisualizer(object):
     """ Class to visualize predictions of GQCNN on a specified dataset. Visualizes TP, TN, FP, FN. """
@@ -57,7 +56,7 @@ class GQCNNPredictionVisualizer(object):
         self.dataset = TensorDataset.open(self.dataset_path)
         
         # setup config
-    	self.cfg = config
+        self.cfg = config
         self.camera_intr = CameraIntrinsics('phoxi',
                                             fx=self.cfg['camera']['focal'],
                                             cx=self.cfg['camera']['cx'],
@@ -65,8 +64,8 @@ class GQCNNPredictionVisualizer(object):
                                             height=self.cfg['camera']['height'],
                                             width=self.cfg['camera']['width'])
         
-    	# setup for visualization
-    	self._setup()
+        # setup for visualization
+        self._setup()
 
     def visualize(self):
         """ Visualize predictions """
@@ -165,7 +164,7 @@ class GQCNNPredictionVisualizer(object):
                 if self.cfg['data_format'] == 'tf_image_suction' or self.cfg['data_format'] == 'suction':
                     grasp = SuctionPoint2D(Point(image.center, 'img'), np.array([1,0,0]), grasp_poses_tensor[ind, 2], camera_intr=self.camera_intr)
 
-                for field in aux_tensors.keys():
+                for field in list(aux_tensors.keys()):
                     logging.info('Field {}: {}'.format(field, aux_tensors[field][ind]))
                     
                 vis2d.figure()
@@ -197,17 +196,17 @@ class GQCNNPredictionVisualizer(object):
 
     def _cleanup(self):
         """ Close GQCNN TF session"""
-    	self._gqcnn.close_session()
+        self._gqcnn.close_session()
 
     def _setup(self):
         """ Setup for visualization """
-    	# setup logger
-    	logging.getLogger().setLevel(logging.INFO)	
+        # setup logger
+        logging.getLogger().setLevel(logging.INFO)	
         logging.info('Setting up for visualization.')
 
-    	#### read config params ###
+        #### read config params ###
 
-    	# visualization params
+        # visualization params
         self.display_image_type = self.cfg['display_image_type']
         self.font_size = self.cfg['font_size']
         self.samples_per_object = self.cfg['samples_per_object']

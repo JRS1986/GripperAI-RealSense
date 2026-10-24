@@ -31,14 +31,16 @@ import matplotlib.pyplot as plt
 import numbers
 import numpy as np
 import os
-import scipy.misc as sm
+from perception.image import imresize
 import sys
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 from autolab_core import YamlConfig
 
-import optimizer_constants
-from optimizer_constants import InputDataMode
+from . import optimizer_constants
+from .optimizer_constants import InputDataMode
+from functools import reduce
 def reduce_shape(shape):
     """ Get shape of a layer for flattening """
     shape = [x.value for x in shape[1:]]
@@ -347,10 +349,10 @@ class GQCNN(object):
         conv1_1b = tf.Variable(tf.truncated_normal([conv1_1_num_filt], stddev=conv1_1_std), name='conv1_1b')
 
         conv1_1_padding = 'SAME'
-        if 'padding' in self._architecture['conv1_1'].keys():
+        if 'padding' in list(self._architecture['conv1_1'].keys()):
             conv1_1_padding = self._architecture['conv1_1']['padding']
         if conv1_1_padding == 'VALID':
-            border_dim = (conv1_1_filt_dim - 1) / 2
+            border_dim = (conv1_1_filt_dim - 1) // 2
             layer_height = layer_height - 2 * border_dim
             layer_width = layer_width - 2 * border_dim
         layer_height = int(np.ceil(float(layer_height) / cfg['conv1_1']['pool_stride']))
@@ -369,10 +371,10 @@ class GQCNN(object):
         conv1_2b = tf.Variable(tf.truncated_normal([conv1_2_num_filt], stddev=conv1_2_std), name='conv1_2b')
 
         conv1_2_padding = 'SAME'
-        if 'padding' in self._architecture['conv1_2'].keys():
+        if 'padding' in list(self._architecture['conv1_2'].keys()):
             conv1_2_padding = self._architecture['conv1_2']['padding']
         if conv1_2_padding == 'VALID':
-            border_dim = (conv1_2_filt_dim - 1) / 2
+            border_dim = (conv1_2_filt_dim - 1) // 2
             layer_height = layer_height - 2 * border_dim
             layer_width = layer_width - 2 * border_dim                    
         layer_height = int(np.ceil(float(layer_height) / cfg['conv1_2']['pool_stride']))
@@ -382,7 +384,7 @@ class GQCNN(object):
         logging.info('Conv1 output size: %d' %(conv_output_size))
 
         use_conv2 = False
-        if 'conv2_1' in cfg.keys():
+        if 'conv2_1' in list(cfg.keys()):
             use_conv2 = True
 
         if use_conv2:
@@ -398,10 +400,10 @@ class GQCNN(object):
             conv2_1b = tf.Variable(tf.truncated_normal([conv2_1_num_filt], stddev=conv2_1_std), name='conv2_1b')
 
             conv2_1_padding = 'SAME'
-            if 'padding' in self._architecture['conv2_1'].keys():
+            if 'padding' in list(self._architecture['conv2_1'].keys()):
                 conv2_1_padding = self._architecture['conv2_1']['padding']
             if conv2_1_padding == 'VALID':
-                border_dim = (conv2_1_filt_dim - 1) / 2
+                border_dim = (conv2_1_filt_dim - 1) // 2
                 layer_height = layer_height - 2 * border_dim
                 layer_width = layer_width - 2 * border_dim            
             layer_height = int(np.ceil(float(layer_height) / cfg['conv2_1']['pool_stride']))
@@ -423,10 +425,10 @@ class GQCNN(object):
             conv2_2b = tf.Variable(tf.truncated_normal([conv2_2_num_filt], stddev=conv2_2_std), name='conv2_2b')
             
             conv2_2_padding = 'SAME'
-            if 'padding' in self._architecture['conv2_2'].keys():
+            if 'padding' in list(self._architecture['conv2_2'].keys()):
                 conv2_2_padding = self._architecture['conv2_2']['padding']
             if conv2_2_padding == 'VALID':
-                border_dim = (conv2_2_filt_dim - 1) / 2
+                border_dim = (conv2_2_filt_dim - 1) // 2
                 layer_height = layer_height - 2 * border_dim
                 layer_width = layer_width - 2 * border_dim            
             layer_height = int(np.ceil(float(layer_height) / cfg['conv2_2']['pool_stride']))
@@ -437,7 +439,7 @@ class GQCNN(object):
             logging.info('Conv2_2 output size: %d' %(conv_output_size))
 
         use_conv3 = False
-        if 'conv3_1' in cfg.keys():
+        if 'conv3_1' in list(cfg.keys()):
             use_conv3 = True
 
         if use_conv3:
@@ -453,10 +455,10 @@ class GQCNN(object):
             conv3_1b = tf.Variable(tf.truncated_normal([conv3_1_num_filt], stddev=conv3_1_std), name='conv3_1b')
             
             conv3_1_padding = 'SAME'
-            if 'padding' in self._architecture['conv3_1'].keys():
+            if 'padding' in list(self._architecture['conv3_1'].keys()):
                 conv3_1_padding = self._architecture['conv3_1']['padding']
             if conv3_1_padding == 'VALID':
-                border_dim = (conv3_1_filt_dim - 1) / 2
+                border_dim = (conv3_1_filt_dim - 1) // 2
                 layer_height = layer_height - 2 * border_dim
                 layer_width = layer_width - 2 * border_dim            
             layer_height = int(np.ceil(float(layer_height) / cfg['conv3_1']['pool_stride']))
@@ -475,10 +477,10 @@ class GQCNN(object):
             conv3_2b = tf.Variable(tf.truncated_normal([conv3_2_num_filt], stddev=conv3_2_std), name='conv3_2b')
             
             conv3_2_padding = 'SAME'
-            if 'padding' in self._architecture['conv3_2'].keys():
+            if 'padding' in list(self._architecture['conv3_2'].keys()):
                 conv3_2_padding = self._architecture['conv3_2']['padding']
             if conv3_2_padding == 'VALID':
-                border_dim = (conv3_2_filt_dim - 1) / 2
+                border_dim = (conv3_2_filt_dim - 1) // 2
                 layer_height = layer_height - 2 * border_dim
                 layer_width = layer_width - 2 * border_dim            
             layer_height = int(np.ceil(float(layer_height) / cfg['conv3_2']['pool_stride']))
@@ -613,13 +615,13 @@ class GQCNN(object):
         # load architecture
         self._architecture = config['architecture']
         self._use_conv2 = False
-        if 'conv2_1' in self._architecture.keys():
+        if 'conv2_1' in list(self._architecture.keys()):
             self._use_conv2 = True
         self._use_conv3 = False
-        if 'conv3_1' in self._architecture.keys():
+        if 'conv3_1' in list(self._architecture.keys()):
             self._use_conv3 = True
         self._use_pc2 = False
-        if 'pc2' in self._architecture.keys() and self._architecture['pc2']['out_size'] > 0:
+        if 'pc2' in list(self._architecture.keys()) and self._architecture['pc2']['out_size'] > 0:
             self._use_pc2 = True
 
         # get in and out sizes of fully-connected layer for possible re-initialization
@@ -879,7 +881,7 @@ class GQCNN(object):
                                       self._im_width, image_arr.shape[3]])
             for i in range(num_images):
                 for c in range(image_arr.shape[3]):
-                    new_image_arr[i,:,:,c] = sm.imresize(image_arr[i,:,:,c],
+                    new_image_arr[i,:,:,c] = imresize(image_arr[i,:,:,c],
                                                          rescale_factor,
                                                          interp='bicubic', mode='F')
             image_arr = new_image_arr
@@ -1007,7 +1009,7 @@ class GQCNN(object):
         """
         # conv1_1
         conv1_1_padding = 'SAME'
-        if 'padding' in self._architecture['conv1_1'].keys():
+        if 'padding' in list(self._architecture['conv1_1'].keys()):
             conv1_1_padding = self._architecture['conv1_1']['padding']
         conv1_1h = tf.nn.relu(tf.nn.conv2d(input_im_node, self._weights.conv1_1W, strides=[
                                 1, 1, 1, 1], padding=conv1_1_padding) + self._weights.conv1_1b)
@@ -1029,7 +1031,7 @@ class GQCNN(object):
 
         # conv1_2
         conv1_2_padding = 'SAME'
-        if 'padding' in self._architecture['conv1_2'].keys():
+        if 'padding' in list(self._architecture['conv1_2'].keys()):
             conv1_2_padding = self._architecture['conv1_2']['padding']
         conv1_2h = tf.nn.relu(tf.nn.conv2d(pool1_1, self._weights.conv1_2W, strides=[
                                 1, 1, 1, 1], padding=conv1_2_padding) + self._weights.conv1_2b)
@@ -1052,7 +1054,7 @@ class GQCNN(object):
         if self._use_conv2:
             # conv2_1
             conv2_1_padding = 'SAME'
-            if 'padding' in self._architecture['conv2_1'].keys():
+            if 'padding' in list(self._architecture['conv2_1'].keys()):
                 conv2_1_padding = self._architecture['conv2_1']['padding']
             conv2_1h = tf.nn.relu(tf.nn.conv2d(pool1_2, self._weights.conv2_1W, strides=[
                 1, 1, 1, 1], padding=conv2_1_padding) + self._weights.conv2_1b)
@@ -1074,7 +1076,7 @@ class GQCNN(object):
 
             # conv2_2
             conv2_2_padding = 'SAME'
-            if 'padding' in self._architecture['conv2_2'].keys():
+            if 'padding' in list(self._architecture['conv2_2'].keys()):
                 conv2_2_padding = self._architecture['conv2_2']['padding']
             conv2_2h = tf.nn.relu(tf.nn.conv2d(pool2_1, self._weights.conv2_2W, strides=[
                 1, 1, 1, 1], padding=conv2_2_padding) + self._weights.conv2_2b)
@@ -1099,7 +1101,7 @@ class GQCNN(object):
         if self._use_conv3:
             # conv3_1
             conv3_1_padding = 'SAME'
-            if 'padding' in self._architecture['conv3_1'].keys():
+            if 'padding' in list(self._architecture['conv3_1'].keys()):
                 conv3_1_padding = self._architecture['conv3_1']['padding']
             conv3_1h = tf.nn.relu(tf.nn.conv2d(pool2_2, self._weights.conv3_1W, strides=[
                 1, 1, 1, 1], padding=conv3_1_padding) + self._weights.conv3_1b)
@@ -1121,7 +1123,7 @@ class GQCNN(object):
 
             # conv3_2
             conv3_2_padding = 'SAME'
-            if 'padding' in self._architecture['conv3_2'].keys():
+            if 'padding' in list(self._architecture['conv3_2'].keys()):
                 conv3_2_padding = self._architecture['conv3_2']['padding']
             conv3_2h = tf.nn.relu(tf.nn.conv2d(pool3_1, self._weights.conv3_2W, strides=[
                 1, 1, 1, 1], padding=conv3_2_padding) + self._weights.conv3_2b)
