@@ -1,34 +1,19 @@
-# Dockerfile
-FROM ubuntu:18.04
-#FROM python:3-alpine sadly this makes some installs in 'pip install requirements' broken... should be somehow possible, but i just dont know how right now
-#RUN apk add python2
-#RUN apk add py2-pip
+# Intel publishes pyrealsense2 Linux wheels for x86_64 only
+FROM --platform=linux/amd64 python:3.13-slim
 
-RUN apt-get update # update the package manager
-RUN apt-get install -y python # install python
-RUN apt-get install -y python3 # install python
-RUN apt-get install -y python-pip
-RUN apt-get install -y python3-pip
+# OpenGL/XCB libraries for OpenCV and the Qt UI, libusb for the RealSense camera
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgl1 libglib2.0-0 libegl1 libfontconfig1 libdbus-1-3 libusb-1.0-0 \
+        libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+        libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY timezonescript.sh /app/timezonescript.sh
-RUN /app/timezonescript.sh
-RUN apt-get install -y python-tk
+COPY . .
+RUN pip install --no-cache-dir --no-deps \
+        -e perception_exactly_this_is_somehow_required -e gqcnn_jeffbranch_adapted
 
-COPY requirements.txt /app/requirements.txt
-
-RUN pip install -r requirements.txt
-RUN pip3 install -r requirements.txt
-
-
-COPY . /app
-#COPY GripperViewer app/GripperViewer
-#COPY gqcnn_jeffbranch_adapted app/gqcnn_jeffbranch_adapted
-
-
-EXPOSE 80
-
-#CMD ["python", "GripperViewer/main_uic.py"]
-#RUN apt-get install -y python-pip python-dev build-essential # install pip other basic python libraries for building packages
-#RUN pip install flask # install flask with pip
+CMD ["python", "dexgripQtUi/main_uic.py"]
